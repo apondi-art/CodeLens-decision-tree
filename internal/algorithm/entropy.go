@@ -27,22 +27,27 @@ func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
 	}
 
 	classCounts := make(map[string]int)
+	totalInstances := 0
+
 	for _, instance := range dataset.RowInstances {
-		if classValue, ok := instance[targetAttr].(string); ok {
+		if classValue, ok := instance[targetAttr].(string); ok && classValue != "" {
 			classCounts[classValue]++
+			totalInstances++
 		}
 	}
 
+	if totalInstances == 0 {
+		return 0.0 // Handle case where all values are missing
+	}
+
 	var entropy float64
-	totalInstances := float64(len(dataset.RowInstances))
 	for _, count := range classCounts {
-		probability := float64(count) / totalInstances
+		probability := float64(count) / float64(totalInstances)
 		entropy -= probability * math.Log2(probability)
 	}
 
 	return entropy
 }
-
 // CalculateGainRatio computes the gain ratio of splitting a dataset on a given attribute.
 // Gain ratio is an improvement over information gain that normalizes for the number of possible splits.
 //
@@ -71,9 +76,14 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 	subsets := make(map[interface{}]*model.Dataset)
 	for _, instance := range dataset.RowInstances {
 		attrValue := instance[attr.Name]
-		if _, exists := subsets[attrValue]; !exists {
-			subsets[attrValue], _ = SplitDataset(dataset, attr, attrValue)
+		if attrValue == nil { // Skip instances with missing attribute values
+			continue
 		}
+		subset, err := SplitDataset(dataset, attr, attrValue)
+		if err != nil {
+			continue // Handle error appropriately
+		}
+		subsets[attrValue] = subset
 	}
 
 	var weightedEntropy float64
@@ -117,6 +127,9 @@ func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAtt
 
 	for _, instance := range dataset.RowInstances {
 		attrValue := instance[attr.Name]
+		if attrValue == nil { // Skip instances with missing attribute values
+			continue
+		}
 		subsets[attrValue]++
 	}
 
