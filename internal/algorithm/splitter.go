@@ -1,13 +1,20 @@
 package algorithm
 
-import "CodeLens-decision-tree/internal/model"
+import (
+	"errors"
+	"sort"
 
-func SplitDataset(dataset *model.Dataset, attr *model.Attribute, value interface{}) (*model.Dataset, error) {
-	return &model.Dataset{}, nil
-}
-func FindBestNumericalSplit(dataset *model.Dataset, attr *model.Attribute, targetAttr string) (float64, float64) {
-	return 0,0
-}
-func DistributeInstance(instance map[string]interface{}, children map[interface{}]*model.Node) map[*model.Node]float64 {
-	return map[*model.Node]float64{}
-}
+	"CodeLens-decision-tree/internal/model"
+)
+
+// SplitDataset divides the dataset based on a specified attribute value.
+// It returns a subset where the attribute matches the provided value.
+//
+// Parameters:
+// - dataset: A pointer to the dataset to be split.
+// - attr: A pointer to the attribute used for splitting.
+// - value: The attribute value to filter records by.
+//
+// Returns:
+// - A new dataset containing only records matching the given attribute value.
+// - An error if dataset or attribute is nil.
