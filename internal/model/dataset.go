@@ -5,7 +5,7 @@ type Dataset struct {
 	RowInstances     []map[string]interface{} // Data instances stored as key-value pair(map[column name]rowvalue)
 	ColumnAttributes map[string]*Attribute    // Column metadata(column description)
 	ColumnNames      []string                 // Ordered list of attribute names
-	TargetColumn    string                   // Target column name
+	TargetColumn     string                   // Target column name
 	TargetOccurrence map[string]int           // Frequency of each class in dataset
 	TotalRows        int                      // Number of rows in dataset
 	NonTargetColumns int                      // Number of attributes (excluding target)
@@ -31,9 +31,19 @@ func (d *Dataset) FilterByNumericCondition(attr string, condition string, thresh
 	return &Dataset{}
 }
 
-// CountClassInstances counts instances per target class
+// CountClassInstances counts instances per target class.
 func (d *Dataset) CountClassInstances() map[string]int {
-	return map[string]int{}
+	classCounts := make(map[string]int)
+
+	for _, instance := range d.RowInstances {
+		// Skip if the target column is missing or has a nil value
+		if value, exists := instance[d.TargetColumn]; exists && value != nil {
+			class := value.(string)
+			classCounts[class]++
+		}
+	}
+
+	return classCounts
 }
 
 // GetUniqueValues returns all unique values for a given attribute
