@@ -5,7 +5,7 @@ type Dataset struct {
 	RowInstances     []map[string]interface{} // Data instances stored as key-value pair(map[column name]rowvalue)
 	ColumnAttributes map[string]*Attribute    // Column metadata(column description)
 	ColumnNames      []string                 // Ordered list of attribute names
-	TargetColumn    string                   // Target column name
+	TargetColumn     string                   // Target column name
 	TargetOccurrence map[string]int           // Frequency of each class in dataset
 	TotalRows        int                      // Number of rows in dataset
 	NonTargetColumns int                      // Number of attributes (excluding target)
@@ -31,14 +31,39 @@ func (d *Dataset) FilterByNumericCondition(attr string, condition string, thresh
 	return &Dataset{}
 }
 
-// CountClassInstances counts instances per target class
+// CountClassInstances counts instances per target class.
 func (d *Dataset) CountClassInstances() map[string]int {
-	return map[string]int{}
+	classCounts := make(map[string]int)
+
+	for _, instance := range d.RowInstances {
+		// Skip if the target column is missing or has a nil value
+		if value, exists := instance[d.TargetColumn]; exists && value != nil {
+			class := value.(string)
+			classCounts[class]++
+		}
+	}
+
+	return classCounts
 }
 
 // GetUniqueValues returns all unique values for a given attribute
 func (d *Dataset) GetUniqueValues(attr string) []interface{} {
-	return []interface{}{}
+	uniqueValues := make(map[interface{}]bool)
+
+	// Iterate through all instances and collect unique values.
+	for _, instance := range d.RowInstances {
+		if value, exists := instance[attr]; exists {
+			uniqueValues[value] = true
+		}
+	}
+
+	// Convert the map keys to a slice.
+	result := make([]interface{}, 0, len(uniqueValues))
+	for value := range uniqueValues {
+		result = append(result, value)
+	}
+
+	return result
 }
 
 // GetNumericValues returns all values for a numeric attribute as floats
@@ -61,14 +86,67 @@ func (d *Dataset) GetMajorityClass() string {
 	return ""
 }
 
-// SplitByNumericThreshold splits dataset based on numeric attribute threshold
-func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[string]*Dataset, error) {
-	return map[string]*Dataset{}, nil
+// func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[string]*Dataset, error)
+
+// SplitByNumericThreshold splits the dataset based on a numerical threshold.
+func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[interface{}]*Dataset, error) {
+	subsets := make(map[interface{}]*Dataset)
+
+	// Create subsets for values <= threshold and values > threshold.
+	lessThanOrEqual := &Dataset{
+		RowInstances: []map[string]interface{}{},
+		TargetColumn: d.TargetColumn,
+	}
+	greaterThan := &Dataset{
+		RowInstances: []map[string]interface{}{},
+		TargetColumn: d.TargetColumn,
+	}
+
+	// Add instances to the appropriate subset.
+	for _, instance := range d.RowInstances {
+		value, ok := instance[attr].(float64)
+		if !ok {
+			continue
+		}
+
+		if value <= threshold {
+			lessThanOrEqual.RowInstances = append(lessThanOrEqual.RowInstances, instance)
+		} else {
+			greaterThan.RowInstances = append(greaterThan.RowInstances, instance)
+		}
+	}
+
+	subsets["<="] = lessThanOrEqual
+	subsets[">"] = greaterThan
+
+	return subsets, nil
 }
 
-// SplitByCategoricalValue splits dataset based on categorical attribute values
+// SplitByCategoricalValue splits the dataset based on the unique values of a categorical attribute.
 func (d *Dataset) SplitByCategoricalValue(attr string) (map[interface{}]*Dataset, error) {
-	return map[interface{}]*Dataset{}, nil
+	subsets := make(map[interface{}]*Dataset)
+
+	// Get all unique values for the attribute.
+	uniqueValues := d.GetUniqueValues(attr)
+
+	// Create a subset for each unique value.
+	for _, value := range uniqueValues {
+		subset := &Dataset{
+			RowInstances: []map[string]interface{}{},
+			TargetColumn: d.TargetColumn,
+		}
+
+		// Add instances with the current value to the subset.
+		for _, instance := range d.RowInstances {
+			if instance[attr] == value {
+				subset.RowInstances = append(subset.RowInstances, instance)
+			}
+		}
+
+		subsets[value] = subset
+	}
+
+	return subsets, nil
 }
 
 // SplitWithMissingValues splits dataset handling missing values using weights
