@@ -6,6 +6,44 @@ import (
 	"CodeLens-decision-tree/internal/model"
 )
 
+func TestSelectBestAttribute(t *testing.T) {
+	tests := []struct {
+		name         string
+		dataset      model.Dataset
+		attributes   []model.Attribute
+		target       string
+		expectedAttr string
+		expectedGain float64
+	}{
+		{
+			name: "No attributes left",
+			dataset: model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"PlayTennis": "Yes"},
+					{"PlayTennis": "Yes"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes:   []model.Attribute{},
+			target:       "PlayTennis",
+			expectedAttr: "",
+			expectedGain: -1.0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			attr, gain := SelectBestAttribute(tt.dataset, tt.attributes, tt.target)
+			if attr != nil && attr.Name != tt.expectedAttr {
+				t.Errorf("SelectBestAttribute() attribute = %v, expected %v", attr.Name, tt.expectedAttr)
+			}
+			if gain != tt.expectedGain {
+				t.Errorf("SelectBestAttribute() gain = %v, expected %v", gain, tt.expectedGain)
+			}
+		})
+	}
+}
+
 func TestMajorityClass(t *testing.T) {
 	tests := []struct {
 		name     string
