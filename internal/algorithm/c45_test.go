@@ -16,6 +16,25 @@ func TestSelectBestAttribute(t *testing.T) {
 		expectedGain float64
 	}{
 		{
+			name: "Best attribute is Outlook",
+			dataset: model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Outlook": "Sunny", "PlayTennis": "No"},
+					{"Outlook": "Sunny", "PlayTennis": "No"},
+					{"Outlook": "Overcast", "PlayTennis": "Yes"},
+					{"Outlook": "Rain", "PlayTennis": "Yes"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []model.Attribute{
+				{Name: "Outlook", Type: model.Categorical},
+				{Name: "Temperature", Type: model.Categorical},
+			},
+			target:       "PlayTennis",
+			expectedAttr: "Outlook",
+			expectedGain: 0.666667, // Precomputed gain ratio for Outlook
+		},
+		{
 			name: "No attributes left",
 			dataset: model.Dataset{
 				RowInstances: []map[string]interface{}{
