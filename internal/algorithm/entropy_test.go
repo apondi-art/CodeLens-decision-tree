@@ -1,10 +1,9 @@
 package algorithm
 
 import (
+	"CodeLens-decision-tree/internal/model"
 	"math"
 	"testing"
-
-	"CodeLens-decision-tree/internal/model"
 )
 
 // Helper function to compare floating-point numbers with a small tolerance.
@@ -115,13 +114,7 @@ func TestCalculateInformationGain(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// Ensure correct attribute name is passed
-			splitAttr := ""
-			if test.attr != nil {
-				splitAttr = test.attr.Name
-			}
-
-			got := CalculateInformationGain(test.dataset, splitAttr, test.targetAttr)
+			got := CalculateInformationGain(test.dataset, test.attr, test.targetAttr)
 			if !almostEqual(got, test.expected, 1e-4) {
 				t.Errorf("Expected %f, got %f", test.expected, got)
 			}
@@ -175,13 +168,7 @@ func TestCalculateGainRatio(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// Ensure correct attribute name is passed
-			splitAttr := ""
-			if test.attr != nil {
-				splitAttr = test.attr.Name
-			}
-
-			got := CalculateGainRatio(test.dataset, splitAttr, test.targetAttr)
+			got := CalculateGainRatio(test.dataset, test.attr, test.targetAttr)
 			if !almostEqual(got, test.expected, 1e-4) {
 				t.Errorf("Expected %f, got %f", test.expected, got)
 			}
