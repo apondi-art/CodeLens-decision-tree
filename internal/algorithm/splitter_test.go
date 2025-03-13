@@ -105,3 +105,20 @@ func TestComputeInformationGain(t *testing.T) {
 		t.Fatalf("expected positive information gain, got %f", gain)
 	}
 }
+// test edge case or missing data
+func TestSplitDatasetWithMissingAttribute(t *testing.T) {
+	dataset := &model.Dataset{
+		RowInstances: []map[string]interface{}{
+			{"attribute": "A"},
+			{"attribute": nil},
+			{"attribute": "B"},
+		},
+	}
+	subset, err := SplitDataset(dataset, &model.Attribute{Name: "attribute"}, "A")
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+	if len(subset.RowInstances) != 1 {
+		t.Errorf("Expected 1 instance, got %d", len(subset.RowInstances))
+	}
+}
