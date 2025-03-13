@@ -10,7 +10,7 @@ func TestSelectBestAttribute(t *testing.T) {
 	tests := []struct {
 		name         string
 		dataset      model.Dataset
-		attributes   []model.Attribute
+		attributes   []*model.Attribute
 		target       string
 		expectedAttr string
 		expectedGain float64
@@ -26,7 +26,7 @@ func TestSelectBestAttribute(t *testing.T) {
 				},
 				TargetColumn: "PlayTennis",
 			},
-			attributes: []model.Attribute{
+			attributes: []*model.Attribute{
 				{Name: "Outlook", Type: model.Categorical},
 				{Name: "Temperature", Type: model.Categorical},
 			},
@@ -43,7 +43,7 @@ func TestSelectBestAttribute(t *testing.T) {
 				},
 				TargetColumn: "PlayTennis",
 			},
-			attributes:   []model.Attribute{},
+			attributes:   []*model.Attribute{},
 			target:       "PlayTennis",
 			expectedAttr: "",
 			expectedGain: -1.0,
