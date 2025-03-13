@@ -74,3 +74,41 @@ func FindBestNumericalSplit(dataset *model.Dataset, attr *model.Attribute, targe
 
 	return bestThreshold, bestGain
 }
+
+// DistributeInstance assigns an instance to child nodes based on attribute values.
+// This function is useful for decision trees where a probabilistic split might occur.
+//
+// Parameters:
+// - instance: A map representing the data instance.
+// - children: A map of possible child nodes indexed by attribute values.
+//
+// Returns:
+// - A mapping of child nodes to their respective probabilities.
+func DistributeInstance(instance map[string]interface{}, children map[interface{}]*model.Node) map[*model.Node]float64 {
+	distribution := make(map[*model.Node]float64)
+
+	for value, child := range children {
+		if instanceValue, exists := instance[child.Attribute.Name]; exists && instanceValue == value {
+			distribution[child] = 1.0 
+		}
+	}
+
+	return distribution
+}
+
+
+// computeInformationGain estimates the information gain for a numerical split.
+// This function serves as a placeholder and should be replaced with an actual entropy-based calculation.
+//
+// Parameters:
+// - dataset: The dataset containing instances.
+// - attr: The attribute to evaluate.
+// - threshold: The numerical split point.
+// - targetAttr: The target attribute for classification.
+//
+// Returns:
+// - A float64 representing the computed information gain.
+func computeInformationGain(dataset *model.Dataset, attr string, threshold float64, targetAttr string) float64 {
+	// Placeholder for actual entropy-based information gain calculation
+	return 0.0
+}
