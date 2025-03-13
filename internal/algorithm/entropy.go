@@ -66,5 +66,29 @@ func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
 //
 // Returns:
 // - A float64 value representing the gain ratio.
-func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64
+
+func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64 {
+	// Compute the entropy before splitting
+	originalEntropy := CalculateEntropy(dataset, targetAttr)
+
+	// Group instances by attribute value
+	subsets := make(map[interface{}][]map[string]interface{})
+	for _, instance := range dataset.Instances {
+		attrValue := instance[attr.Name]
+		subsets[attrValue] = append(subsets[attrValue], instance)
+	}
+
+	// Compute weighted entropy after splitting
+	var weightedEntropy float64
+	totalInstances := float64(len(dataset.Instances))
+	for _, subset := range subsets {
+		subDataset := &model.Dataset{Instances: subset}
+		probability := float64(len(subDataset.Instances)) / totalInstances
+		weightedEntropy += probability * CalculateEntropy(subDataset, targetAttr)
+	}
+
+	// Information Gain = Entropy before split - Weighted entropy after split
+	return originalEntropy - weightedEntropy
+}
+
 func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64
