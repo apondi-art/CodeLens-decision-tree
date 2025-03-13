@@ -2,13 +2,13 @@ package model
 
 // Dataset represents a collection of instances with attributes
 type Dataset struct {
-	Instances      []map[string]interface{} // Data instances
-	Attributes     map[string]*Attribute    // Column metadata
-	AttributeNames []string                 // Ordered list of attribute names
-	TargetAttr     string                   // Target attribute name
-	ClassCounts    map[string]int           // Frequency of each class in dataset
-	NumInstances   int                      // Number of instances in dataset
-	NumAttributes  int                      // Number of attributes (excluding target)
+	RowInstances     []map[string]interface{} // Data instances stored as key-value pair(map[column name]rowvalue)
+	ColumnAttributes map[string]*Attribute    // Column metadata(column description)
+	ColumnNames      []string                 // Ordered list of attribute names
+	TargetColumns    string                   // Target column name
+	TargetOccurrence map[string]int           // Frequency of each class in dataset
+	TotalRows        int                      // Number of rows in dataset
+	NonTargetColumns int                      // Number of attributes (excluding target)
 }
 
 // NewDataset creates a new dataset from raw data
