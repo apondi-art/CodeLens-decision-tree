@@ -7,6 +7,7 @@ const (
 	Numeric
 	Categorical
 	Boolean
+	Timestamp
 )
 
 // string method for AttributeType
@@ -19,6 +20,8 @@ func (a AttributeType) String() string {
 		return "categorical"
 	case Boolean:
 		return "boolean"
+	case Timestamp:
+		return "timestamp"
 	default:
 		return "unknown"
 	}
