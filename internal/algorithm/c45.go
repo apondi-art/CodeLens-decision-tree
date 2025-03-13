@@ -6,8 +6,20 @@ func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr
 	return &model.Node{}, nil
 }
 
-func SelectBestAttribute(dataset *model.Dataset, attributes []*model.Attribute, targetAttr string) (*model.Attribute, float64) {
-	return &model.Attribute{}, 0
+// SelectBestAttribute selects the attribute with the highest gain ratio.
+func SelectBestAttribute(dataset model.Dataset, attributes []model.Attribute, targetAttr string) (*model.Attribute, float64) {
+	var bestAttribute *model.Attribute
+	maxGainRatio := -1.0
+
+	for _, attr := range attributes {
+		gainRatio := attr.CalculateGainRatio(&dataset)
+		if gainRatio > maxGainRatio {
+			maxGainRatio = gainRatio
+			bestAttribute = &attr
+		}
+	}
+
+	return bestAttribute, maxGainRatio
 }
 
 // MajorityClass returns the most frequent class in the dataset for the target attribute.
