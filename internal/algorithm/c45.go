@@ -12,7 +12,7 @@ func SelectBestAttribute(dataset model.Dataset, attributes []model.Attribute, ta
 	maxGainRatio := -1.0
 
 	for _, attr := range attributes {
-		gainRatio := attr.CalculateGainRatio(&dataset)
+		gainRatio := CalculateGainRatio(&dataset, &attr, targetAttr)
 		if gainRatio > maxGainRatio {
 			maxGainRatio = gainRatio
 			bestAttribute = &attr
