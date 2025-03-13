@@ -107,9 +107,31 @@ func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[i
 	return subsets, nil
 }
 
-// SplitByCategoricalValue splits dataset based on categorical attribute values
+// SplitByCategoricalValue splits the dataset based on the unique values of a categorical attribute.
 func (d *Dataset) SplitByCategoricalValue(attr string) (map[interface{}]*Dataset, error) {
-	return map[interface{}]*Dataset{}, nil
+	subsets := make(map[interface{}]*Dataset)
+
+	// Get all unique values for the attribute.
+	uniqueValues := d.GetUniqueValues(attr)
+
+	// Create a subset for each unique value.
+	for _, value := range uniqueValues {
+		subset := &Dataset{
+			RowInstances: []map[string]interface{}{},
+			TargetColumn: d.TargetColumn,
+		}
+
+		// Add instances with the current value to the subset.
+		for _, instance := range d.RowInstances {
+			if instance[attr] == value {
+				subset.RowInstances = append(subset.RowInstances, instance)
+			}
+		}
+
+		subsets[value] = subset
+	}
+
+	return subsets, nil
 }
 
 // SplitWithMissingValues splits dataset handling missing values using weights
