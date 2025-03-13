@@ -48,7 +48,22 @@ func (d *Dataset) CountClassInstances() map[string]int {
 
 // GetUniqueValues returns all unique values for a given attribute
 func (d *Dataset) GetUniqueValues(attr string) []interface{} {
-	return []interface{}{}
+	uniqueValues := make(map[interface{}]bool)
+
+	// Iterate through all instances and collect unique values.
+	for _, instance := range d.RowInstances {
+		if value, exists := instance[attr]; exists {
+			uniqueValues[value] = true
+		}
+	}
+
+	// Convert the map keys to a slice.
+	result := make([]interface{}, 0, len(uniqueValues))
+	for value := range uniqueValues {
+		result = append(result, value)
+	}
+
+	return result
 }
 
 // GetNumericValues returns all values for a numeric attribute as floats
