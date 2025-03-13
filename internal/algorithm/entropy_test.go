@@ -57,6 +57,18 @@ func TestCalculateEntropy(t *testing.T) {
 			targetAttr: "class",
 			expected:   0.97095, // Calculated manually
 		},
+		{
+			name: "Missing values in target attribute",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"class": "A"},
+					{"class": nil}, // Missing value
+					{"class": "B"},
+				},
+			},
+			targetAttr: "class",
+			expected:   1.0, // Update based on your calculation logic
+		},
 	}
 
 	for _, test := range tests {
@@ -123,6 +135,7 @@ func TestCalculateInformationGain(t *testing.T) {
 	}
 }
 
+
 // TestCalculateGainRatio verifies gain ratio calculations.
 func TestCalculateGainRatio(t *testing.T) {
 	tests := []struct {
@@ -174,5 +187,24 @@ func TestCalculateGainRatio(t *testing.T) {
 				t.Errorf("Expected %f, got %f", test.expected, got)
 			}
 		})
+	}
+}
+
+// TestCalculateEntropyMissingValues checks how the function handles missing values.
+func TestCalculateEntropyWithMissingValues(t *testing.T) {
+	dataset := &model.Dataset{
+		RowInstances: []map[string]interface{}{
+			{"attribute1": "A", "target": "yes"},
+			{"attribute1": nil, "target": "no"},
+			{"attribute1": "B", "target": "yes"},
+		},
+	}
+
+	// Calculate expected entropy
+	expectedEntropy := -(2.0/3.0*math.Log2(2.0/3.0) + 1.0/3.0*math.Log2(1.0/3.0))
+
+	actualEntropy := CalculateEntropy(dataset, "target")
+	if actualEntropy != expectedEntropy {
+		t.Errorf("Expected %v, got %v", expectedEntropy, actualEntropy)
 	}
 }
