@@ -61,6 +61,16 @@ func TestMajorityClass(t *testing.T) {
 			target:   "PlayTennis",
 			expected: "",
 		},
+		{
+			name: "Missing target column",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Outlook": "Sunny"},
+					{"Outlook": "Rain"},
+				},
+				TargetColumn: "PlayTennis", // Target column does not exist in records
+			},
+		},
 	}
 
 	for _, tt := range tests {
