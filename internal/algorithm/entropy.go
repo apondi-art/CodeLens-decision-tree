@@ -1,10 +1,10 @@
 package algorithm
 
-import( 
+import (
 	"math"
+
 	"CodeLens-decision-tree/internal/model"
 )
-
 
 // CalculateEntropy computes the entropy of a dataset based on a given target attribute.
 // Entropy measures the level of impurity or uncertainty in the dataset.
@@ -21,23 +21,18 @@ import(
 // Returns:
 // - A float64 value representing the entropy of the dataset
 
-
 func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
 	if len(dataset.Instances) == 0 {
 		return 0.0
 	}
 
-	// Count occurrences of each class in the target attribute.
 	classCounts := make(map[string]int)
 	for _, instance := range dataset.Instances {
-		classValue, ok := instance[targetAttr].(string)
-		if !ok {
-			continue // Ignore instances with missing or non-string target values.
+		if classValue, ok := instance[targetAttr].(string); ok {
+			classCounts[classValue]++
 		}
-		classCounts[classValue]++
 	}
 
-	// Calculate entropy
 	var entropy float64
 	totalInstances := float64(len(dataset.Instances))
 	for _, count := range classCounts {
@@ -68,27 +63,27 @@ func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
 // - A float64 value representing the gain ratio.
 
 func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64 {
-	// Compute the entropy before splitting
 	originalEntropy := CalculateEntropy(dataset, targetAttr)
+	if originalEntropy == 0 {
+		return 0.0
+	}
 
-	// Group instances by attribute value
-	subsets := make(map[interface{}][]map[string]interface{})
+	subsets := make(map[interface{}]*model.Dataset)
 	for _, instance := range dataset.Instances {
 		attrValue := instance[attr.Name]
-		subsets[attrValue] = append(subsets[attrValue], instance)
+		if _, exists := subsets[attrValue]; !exists {
+			subsets[attrValue], _ = SplitDataset(dataset, attr, attrValue)
+		}
 	}
 
-	// Compute weighted entropy after splitting
 	var weightedEntropy float64
 	totalInstances := float64(len(dataset.Instances))
-	for _, subset := range subsets {
-		subDataset := &model.Dataset{Instances: subset}
-		probability := float64(len(subDataset.Instances)) / totalInstances
-		weightedEntropy += probability * CalculateEntropy(subDataset, targetAttr)
+	for _, subDataset := range subsets {
+		subsetProbability := float64(len(subDataset.Instances)) / totalInstances
+		weightedEntropy += subsetProbability * CalculateEntropy(subDataset, targetAttr)
 	}
 
-	// Information Gain = Entropy before split - Weighted entropy after split
-	return originalEntropy - weightedEntropy
+	return math.Round((originalEntropy-weightedEntropy)*1e6) / 1e6
 }
 
 // CalculateGainRatio computes the gain ratio of splitting a dataset on a given attribute.
@@ -111,32 +106,30 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 // - A float64 value representing the gain ratio.
 
 func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64 {
-	// Compute the information gain
 	informationGain := CalculateInformationGain(dataset, attr, targetAttr)
 	if informationGain == 0 {
-		return 0.0 // Avoid division by zero
+		return 0.0
 	}
 
-	// Compute the SplitInfo (entropy of the attribute distribution)
-	var splitInfo float64
+	splitInfo := 0.0
 	totalInstances := float64(len(dataset.Instances))
 	subsets := make(map[interface{}]int)
 
-	// Count instances per unique attribute value
 	for _, instance := range dataset.Instances {
 		attrValue := instance[attr.Name]
 		subsets[attrValue]++
 	}
 
-	// Compute SplitInfo
 	for _, count := range subsets {
 		probability := float64(count) / totalInstances
-		splitInfo -= probability * math.Log2(probability)
+		if probability > 0 {
+			splitInfo -= probability * math.Log2(probability)
+		}
 	}
 
-	// Gain Ratio = Information Gain / SplitInfo
 	if splitInfo == 0 {
-		return 0.0 // Prevent division by zero
+		return 0.0
 	}
-	return informationGain / splitInfo
+
+	return math.Round((informationGain/splitInfo)*1e6) / 1e6
 }
