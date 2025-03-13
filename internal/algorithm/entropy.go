@@ -22,19 +22,19 @@ import (
 // - A float64 value representing the entropy of the dataset
 
 func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
-	if len(dataset.Instances) == 0 {
+	if len(dataset.RowInstances) == 0 {
 		return 0.0
 	}
 
 	classCounts := make(map[string]int)
-	for _, instance := range dataset.Instances {
+	for _, instance := range dataset.RowInstances {
 		if classValue, ok := instance[targetAttr].(string); ok {
 			classCounts[classValue]++
 		}
 	}
 
 	var entropy float64
-	totalInstances := float64(len(dataset.Instances))
+	totalInstances := float64(len(dataset.RowInstances))
 	for _, count := range classCounts {
 		probability := float64(count) / totalInstances
 		entropy -= probability * math.Log2(probability)
@@ -69,7 +69,7 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 	}
 
 	subsets := make(map[interface{}]*model.Dataset)
-	for _, instance := range dataset.Instances {
+	for _, instance := range dataset.RowInstances {
 		attrValue := instance[attr.Name]
 		if _, exists := subsets[attrValue]; !exists {
 			subsets[attrValue], _ = SplitDataset(dataset, attr, attrValue)
@@ -77,9 +77,9 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 	}
 
 	var weightedEntropy float64
-	totalInstances := float64(len(dataset.Instances))
+	totalInstances := float64(len(dataset.RowInstances))
 	for _, subDataset := range subsets {
-		subsetProbability := float64(len(subDataset.Instances)) / totalInstances
+		subsetProbability := float64(len(subDataset.RowInstances)) / totalInstances
 		weightedEntropy += subsetProbability * CalculateEntropy(subDataset, targetAttr)
 	}
 
@@ -112,10 +112,10 @@ func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAtt
 	}
 
 	splitInfo := 0.0
-	totalInstances := float64(len(dataset.Instances))
+	totalInstances := float64(len(dataset.RowInstances))
 	subsets := make(map[interface{}]int)
 
-	for _, instance := range dataset.Instances {
+	for _, instance := range dataset.RowInstances {
 		attrValue := instance[attr.Name]
 		subsets[attrValue]++
 	}
