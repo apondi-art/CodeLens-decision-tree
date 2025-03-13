@@ -71,9 +71,40 @@ func (d *Dataset) GetMajorityClass() string {
 	return ""
 }
 
-// SplitByNumericThreshold splits dataset based on numeric attribute threshold
-func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[string]*Dataset, error) {
-	return map[string]*Dataset{}, nil
+// func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[string]*Dataset, error)
+
+// SplitByNumericThreshold splits the dataset based on a numerical threshold.
+func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[interface{}]*Dataset, error) {
+	subsets := make(map[interface{}]*Dataset)
+
+	// Create subsets for values <= threshold and values > threshold.
+	lessThanOrEqual := &Dataset{
+		RowInstances: []map[string]interface{}{},
+		TargetColumn: d.TargetColumn,
+	}
+	greaterThan := &Dataset{
+		RowInstances: []map[string]interface{}{},
+		TargetColumn: d.TargetColumn,
+	}
+
+	// Add instances to the appropriate subset.
+	for _, instance := range d.RowInstances {
+		value, ok := instance[attr].(float64)
+		if !ok {
+			continue
+		}
+
+		if value <= threshold {
+			lessThanOrEqual.RowInstances = append(lessThanOrEqual.RowInstances, instance)
+		} else {
+			greaterThan.RowInstances = append(greaterThan.RowInstances, instance)
+		}
+	}
+
+	subsets["<="] = lessThanOrEqual
+	subsets[">"] = greaterThan
+
+	return subsets, nil
 }
 
 // SplitByCategoricalValue splits dataset based on categorical attribute values
