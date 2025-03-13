@@ -108,6 +108,26 @@ func DistributeInstance(instance map[string]interface{}, children map[interface{
 // Returns:
 // - A float64 representing the computed information gain.
 func computeInformationGain(dataset *model.Dataset, attr string, threshold float64, targetAttr string) float64 {
-	// Placeholder for actual entropy-based information gain calculation
-	return 0.0
+	// Calculate original entropy
+	originalEntropy := CalculateEntropy(dataset, targetAttr)
+
+	// Create subsets based on the threshold
+	subset1 := &model.Dataset{RowInstances: []map[string]interface{}{}}
+	subset2 := &model.Dataset{RowInstances: []map[string]interface{}{}}
+
+	for _, instance := range dataset.RowInstances {
+		if instance[attr].(float64) <= threshold {
+			subset1.RowInstances = append(subset1.RowInstances, instance)
+		} else {
+			subset2.RowInstances = append(subset2.RowInstances, instance)
+		}
+	}
+
+	// Calculate weighted entropy
+	totalInstances := float64(len(dataset.RowInstances))
+	weightedEntropy := (float64(len(subset1.RowInstances))/totalInstances)*CalculateEntropy(subset1, targetAttr) +
+		(float64(len(subset2.RowInstances))/totalInstances)*CalculateEntropy(subset2, targetAttr)
+
+	// Return information gain
+	return originalEntropy - weightedEntropy
 }
