@@ -135,7 +135,6 @@ func TestCalculateInformationGain(t *testing.T) {
 	}
 }
 
-
 // TestCalculateGainRatio verifies gain ratio calculations.
 func TestCalculateGainRatio(t *testing.T) {
 	tests := []struct {
