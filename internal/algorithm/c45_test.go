@@ -39,19 +39,19 @@ func TestMajorityClass(t *testing.T) {
 			target:   "PlayTennis",
 			expected: "Yes",
 		},
-		// {
-		// 	name: "Two classes, majority No",
-		// 	dataset: &model.Dataset{
-		// 		RowInstances: []map[string]interface{}{
-		// 			{"PlayTennis": "No"},
-		// 			{"PlayTennis": "Yes"},
-		// 			{"PlayTennis": "No"},
-		// 		},
-		// 		TargetColumn: "PlayTennis",
-		// 	},
-		// 	target:   "PlayTennis",
-		// 	expected: "No",
-		// },
+		{
+			name: "Two classes, majority No",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"PlayTennis": "No"},
+					{"PlayTennis": "Yes"},
+					{"PlayTennis": "No"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			target:   "PlayTennis",
+			expected: "No",
+		},
 	}
 
 	for _, tt := range tests {
