@@ -24,13 +24,13 @@ func SplitDataset(dataset *model.Dataset, attr *model.Attribute, value interface
 	}
 
 	var subset []map[string]interface{}
-	for _, instance := range dataset.Records {
+	for _, instance := range dataset.RowInstances {
 		if instance[attr.Name] == value {
 			subset = append(subset, instance)
 		}
 	}
 
-	return &model.Dataset{Records: subset, Attributes: dataset.Attributes}, nil
+	return &model.Dataset{RowInstances: subset, ColumnAttributes: dataset.ColumnAttributes}, nil
 }
 
 // FindBestNumericalSplit identifies the optimal threshold for splitting a numerical attribute.
@@ -53,7 +53,7 @@ func FindBestNumericalSplit(dataset *model.Dataset, attr *model.Attribute, targe
 	var values []float64
 
 	// Extract numerical values from dataset
-	for _, instance := range dataset.Records {
+	for _, instance := range dataset.RowInstances {
 		if val, ok := instance[attr.Name].(float64); ok {
 			values = append(values, val)
 		}
@@ -89,13 +89,12 @@ func DistributeInstance(instance map[string]interface{}, children map[interface{
 
 	for value, child := range children {
 		if instanceValue, exists := instance[child.Attribute.Name]; exists && instanceValue == value {
-			distribution[child] = 1.0 
+			distribution[child] = 1.0
 		}
 	}
 
 	return distribution
 }
-
 
 // computeInformationGain estimates the information gain for a numerical split.
 // This function serves as a placeholder and should be replaced with an actual entropy-based calculation.
