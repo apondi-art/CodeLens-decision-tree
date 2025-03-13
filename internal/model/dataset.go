@@ -5,7 +5,7 @@ type Dataset struct {
 	RowInstances     []map[string]interface{} // Data instances stored as key-value pair(map[column name]rowvalue)
 	ColumnAttributes map[string]*Attribute    // Column metadata(column description)
 	ColumnNames      []string                 // Ordered list of attribute names
-	TargetColumns    string                   // Target column name
+	TargetColumn    string                   // Target column name
 	TargetOccurrence map[string]int           // Frequency of each class in dataset
 	TotalRows        int                      // Number of rows in dataset
 	NonTargetColumns int                      // Number of attributes (excluding target)
