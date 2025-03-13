@@ -6,6 +6,67 @@ import (
 	"CodeLens-decision-tree/internal/model"
 )
 
+func TestBuildTree(t *testing.T) {
+	tests := []struct {
+		name          string
+		dataset       *model.Dataset
+		attributes    []*model.Attribute
+		targetAttr    string
+		maxDepth      int
+		expectedClass string // Expected class for a sample instance
+		expectedError bool   // Whether an error is expected
+	}{
+		{
+			name: "Pure dataset",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Outlook": "Sunny", "PlayTennis": "No"},
+					{"Outlook": "Sunny", "PlayTennis": "No"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Outlook", Type: model.Categorical},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      5,
+			expectedClass: "No", // All instances belong to the same class
+			expectedError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tree, err := BuildTree(tt.dataset, tt.attributes, tt.targetAttr, 0, tt.maxDepth)
+
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("Expected error, but got nil")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("BuildTree() error = %v, expected no error", err)
+				return
+			}
+
+			// Test prediction for a sample instance.
+			var instance map[string]interface{}
+			if len(tt.dataset.RowInstances) > 0 {
+				instance = tt.dataset.RowInstances[0]
+			} else {
+				instance = map[string]interface{}{}
+			}
+
+			predictedClass := tree.Predict(instance)
+			if predictedClass != tt.expectedClass {
+				t.Errorf("Predicted class = %v, expected %v", predictedClass, tt.expectedClass)
+			}
+		})
+	}
+}
+
 func TestSelectBestAttribute(t *testing.T) {
 	tests := []struct {
 		name         string
