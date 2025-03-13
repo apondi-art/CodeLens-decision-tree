@@ -48,6 +48,7 @@ func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
 
 	return entropy
 }
+
 // CalculateGainRatio computes the gain ratio of splitting a dataset on a given attribute.
 // Gain ratio is an improvement over information gain that normalizes for the number of possible splits.
 //

@@ -89,13 +89,12 @@ func DistributeInstance(instance map[string]interface{}, children map[interface{
 
 	for value, child := range children {
 		if instanceValue, exists := instance[child.Attribute.Name]; exists && instanceValue == value {
-			distribution[child] = 1.0 
+			distribution[child] = 1.0
 		}
 	}
 
 	return distribution
 }
-
 
 // computeInformationGain estimates the information gain for a numerical split.
 // This function serves as a placeholder and should be replaced with an actual entropy-based calculation.

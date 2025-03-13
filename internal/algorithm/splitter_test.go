@@ -1,8 +1,8 @@
 package algorithm
 
 import (
-	"testing"
 	"CodeLens-decision-tree/internal/model"
+	"testing"
 )
 
 func TestSplitDataset(t *testing.T) {
@@ -105,6 +105,7 @@ func TestComputeInformationGain(t *testing.T) {
 		t.Fatalf("expected positive information gain, got %f", gain)
 	}
 }
+
 // test edge case or missing data
 func TestSplitDatasetWithMissingAttribute(t *testing.T) {
 	dataset := &model.Dataset{
