@@ -52,6 +52,15 @@ func TestMajorityClass(t *testing.T) {
 			target:   "PlayTennis",
 			expected: "No",
 		},
+		{
+			name: "Empty dataset",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{},
+				TargetColumn: "PlayTennis",
+			},
+			target:   "PlayTennis",
+			expected: "",
+		},
 	}
 
 	for _, tt := range tests {
