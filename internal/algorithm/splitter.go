@@ -24,13 +24,13 @@ func SplitDataset(dataset *model.Dataset, attr *model.Attribute, value interface
 	}
 
 	var subset []map[string]interface{}
-	for _, instance := range dataset.Records {
+	for _, instance := range dataset.RowInstances {
 		if instance[attr.Name] == value {
 			subset = append(subset, instance)
 		}
 	}
 
-	return &model.Dataset{Records: subset, Attributes: dataset.Attributes}, nil
+	return &model.Dataset{RowInstances: subset, ColumnAttributes: dataset.ColumnAttributes}, nil
 }
 
 // FindBestNumericalSplit identifies the optimal threshold for splitting a numerical attribute.
@@ -53,7 +53,7 @@ func FindBestNumericalSplit(dataset *model.Dataset, attr *model.Attribute, targe
 	var values []float64
 
 	// Extract numerical values from dataset
-	for _, instance := range dataset.Records {
+	for _, instance := range dataset.RowInstances {
 		if val, ok := instance[attr.Name].(float64); ok {
 			values = append(values, val)
 		}
@@ -109,6 +109,26 @@ func DistributeInstance(instance map[string]interface{}, children map[interface{
 // Returns:
 // - A float64 representing the computed information gain.
 func computeInformationGain(dataset *model.Dataset, attr string, threshold float64, targetAttr string) float64 {
-	// Placeholder for actual entropy-based information gain calculation
-	return 0.0
+	// Calculate original entropy
+	originalEntropy := CalculateEntropy(dataset, targetAttr)
+
+	// Create subsets based on the threshold
+	subset1 := &model.Dataset{RowInstances: []map[string]interface{}{}}
+	subset2 := &model.Dataset{RowInstances: []map[string]interface{}{}}
+
+	for _, instance := range dataset.RowInstances {
+		if instance[attr].(float64) <= threshold {
+			subset1.RowInstances = append(subset1.RowInstances, instance)
+		} else {
+			subset2.RowInstances = append(subset2.RowInstances, instance)
+		}
+	}
+
+	// Calculate weighted entropy
+	totalInstances := float64(len(dataset.RowInstances))
+	weightedEntropy := (float64(len(subset1.RowInstances))/totalInstances)*CalculateEntropy(subset1, targetAttr) +
+		(float64(len(subset2.RowInstances))/totalInstances)*CalculateEntropy(subset2, targetAttr)
+
+	// Return information gain
+	return originalEntropy - weightedEntropy
 }
