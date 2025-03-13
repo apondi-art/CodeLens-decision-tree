@@ -36,8 +36,11 @@ func (d *Dataset) CountClassInstances() map[string]int {
 	classCounts := make(map[string]int)
 
 	for _, instance := range d.RowInstances {
-		class := instance[d.TargetColumn].(string)
-		classCounts[class]++
+		// Skip if the target column is missing or has a nil value
+		if value, exists := instance[d.TargetColumn]; exists && value != nil {
+			class := value.(string)
+			classCounts[class]++
+		}
 	}
 
 	return classCounts
