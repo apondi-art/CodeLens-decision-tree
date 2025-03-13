@@ -91,4 +91,23 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 	return originalEntropy - weightedEntropy
 }
 
+// CalculateGainRatio computes the gain ratio of splitting a dataset on a given attribute.
+// Gain ratio is an improvement over information gain that normalizes for the number of possible splits.
+//
+// Formula:
+// GainRatio(S, A) = IG(S, A) / SplitInfo(S, A)
+//
+// where:
+// - IG(S, A) is the information gain of splitting on attribute A,
+// - SplitInfo(S, A) = - ∑ (|S_v| / |S|) * log₂(|S_v| / |S|)
+//   is the entropy of the distribution of instances across subsets.
+//
+// Parameters:
+// - dataset: A pointer to the dataset containing instances.
+// - attr: The attribute used for splitting.
+// - targetAttr: The name of the target attribute.
+//
+// Returns:
+// - A float64 value representing the gain ratio.
+
 func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64
