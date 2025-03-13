@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 )
 
 // Flags holds the command-line arguments.
@@ -28,7 +27,6 @@ func init() {
 // main parses the flags and prints the values
 func main() {
 	flag.Parse() // Parse command-line flags
-
 }
 
 func executeTrainCommand(inputPath, targetColumn, outputPath string) error
