@@ -1,10 +1,9 @@
 package algorithm
 
-import( 
-	"math"
+import (
 	"CodeLens-decision-tree/internal/model"
+	"math"
 )
-
 
 // CalculateEntropy computes the entropy of a dataset based on a given target attribute.
 // Entropy measures the level of impurity or uncertainty in the dataset.
@@ -20,7 +19,6 @@ import(
 //
 // Returns:
 // - A float64 value representing the entropy of the dataset
-
 
 func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
 	if len(dataset.Instances) == 0 {
