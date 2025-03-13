@@ -3,10 +3,26 @@ package model
 type AttributeType int
 
 const (
-	Categorical AttributeType = iota
-	Numerical
-	Timestamp
+	Unknown AttributeType = iota
+	Numeric
+	Categorical
+	Boolean
 )
+
+// string method for AttributeType
+func (a AttributeType) String() string {
+	switch a {
+
+	case Numeric:
+		return "numeric"
+	case Categorical:
+		return "categorical"
+	case Boolean:
+		return "boolean"
+	default:
+		return "unknown"
+	}
+}
 
 // Split represents a decision split point for an attribute
 type Split struct {
