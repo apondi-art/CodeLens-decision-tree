@@ -22,13 +22,13 @@ func TestCalculateEntropy(t *testing.T) {
 	}{
 		{
 			name:       "Empty dataset",
-			dataset:    &model.Dataset{Instances: []map[string]interface{}{}},
+			dataset:    &model.Dataset{RowInstances: []map[string]interface{}{}},
 			targetAttr: "class",
 			expected:   0.0,
 		},
 		{
 			name: "Single class (pure dataset)",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"class": "A"},
 				{"class": "A"},
 				{"class": "A"},
@@ -38,7 +38,7 @@ func TestCalculateEntropy(t *testing.T) {
 		},
 		{
 			name: "Two-class balanced dataset",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"class": "A"},
 				{"class": "B"},
 			}},
@@ -47,7 +47,7 @@ func TestCalculateEntropy(t *testing.T) {
 		},
 		{
 			name: "Two-class imbalanced dataset",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"class": "A"},
 				{"class": "A"},
 				{"class": "B"},
@@ -80,7 +80,7 @@ func TestCalculateInformationGain(t *testing.T) {
 	}{
 		{
 			name: "Zero information gain (no effect of split)",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"attr": "X", "class": "A"},
 				{"attr": "X", "class": "A"},
 			}},
@@ -90,7 +90,7 @@ func TestCalculateInformationGain(t *testing.T) {
 		},
 		{
 			name: "Full information gain (perfect split)",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"attr": "X", "class": "A"},
 				{"attr": "Y", "class": "B"},
 			}},
@@ -100,7 +100,7 @@ func TestCalculateInformationGain(t *testing.T) {
 		},
 		{
 			name: "Partial information gain",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"attr": "X", "class": "A"},
 				{"attr": "X", "class": "A"},
 				{"attr": "Y", "class": "B"},
@@ -134,7 +134,7 @@ func TestCalculateGainRatio(t *testing.T) {
 	}{
 		{
 			name: "Zero gain ratio (no split effect)",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"attr": "X", "class": "A"},
 				{"attr": "X", "class": "A"},
 			}},
@@ -144,7 +144,7 @@ func TestCalculateGainRatio(t *testing.T) {
 		},
 		{
 			name: "High gain ratio (perfect split)",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"attr": "X", "class": "A"},
 				{"attr": "Y", "class": "B"},
 			}},
@@ -154,7 +154,7 @@ func TestCalculateGainRatio(t *testing.T) {
 		},
 		{
 			name: "Intermediate gain ratio",
-			dataset: &model.Dataset{Instances: []map[string]interface{}{
+			dataset: &model.Dataset{RowInstances: []map[string]interface{}{
 				{"attr": "X", "class": "A"},
 				{"attr": "X", "class": "A"},
 				{"attr": "Y", "class": "B"},
