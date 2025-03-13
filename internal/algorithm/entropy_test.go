@@ -1,9 +1,10 @@
 package algorithm
 
 import (
-	"CodeLens-decision-tree/internal/model"
 	"math"
 	"testing"
+
+	"CodeLens-decision-tree/internal/model"
 )
 
 // Helper function to compare floating-point numbers with a small tolerance.
