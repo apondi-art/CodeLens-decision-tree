@@ -1,6 +1,9 @@
 package algorithm
 
-import "CodeLens-decision-tree/internal/model"
+import( 
+	"math"
+	"CodeLens-decision-tree/internal/model"
+)
 
 
 // CalculateEntropy computes the entropy of a dataset based on a given target attribute.
@@ -18,6 +21,50 @@ import "CodeLens-decision-tree/internal/model"
 // Returns:
 // - A float64 value representing the entropy of the dataset
 
-func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64
+
+func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
+	if len(dataset.Instances) == 0 {
+		return 0.0
+	}
+
+	// Count occurrences of each class in the target attribute.
+	classCounts := make(map[string]int)
+	for _, instance := range dataset.Instances {
+		classValue, ok := instance[targetAttr].(string)
+		if !ok {
+			continue // Ignore instances with missing or non-string target values.
+		}
+		classCounts[classValue]++
+	}
+
+	// Calculate entropy
+	var entropy float64
+	totalInstances := float64(len(dataset.Instances))
+	for _, count := range classCounts {
+		probability := float64(count) / totalInstances
+		entropy -= probability * math.Log2(probability)
+	}
+
+	return entropy
+}
+
+// CalculateGainRatio computes the gain ratio of splitting a dataset on a given attribute.
+// Gain ratio is an improvement over information gain that normalizes for the number of possible splits.
+//
+// Formula:
+// GainRatio(S, A) = IG(S, A) / SplitInfo(S, A)
+//
+// where:
+// - IG(S, A) is the information gain of splitting on attribute A,
+// - SplitInfo(S, A) = - ∑ (|S_v| / |S|) * log₂(|S_v| / |S|)
+//   is the entropy of the distribution of instances across subsets.
+//
+// Parameters:
+// - dataset: A pointer to the dataset containing instances.
+// - attr: The attribute used for splitting.
+// - targetAttr: The name of the target attribute.
+//
+// Returns:
+// - A float64 value representing the gain ratio.
 func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64
 func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64
