@@ -110,4 +110,33 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 // Returns:
 // - A float64 value representing the gain ratio.
 
-func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64
+func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64 {
+	// Compute the information gain
+	informationGain := CalculateInformationGain(dataset, attr, targetAttr)
+	if informationGain == 0 {
+		return 0.0 // Avoid division by zero
+	}
+
+	// Compute the SplitInfo (entropy of the attribute distribution)
+	var splitInfo float64
+	totalInstances := float64(len(dataset.Instances))
+	subsets := make(map[interface{}]int)
+
+	// Count instances per unique attribute value
+	for _, instance := range dataset.Instances {
+		attrValue := instance[attr.Name]
+		subsets[attrValue]++
+	}
+
+	// Compute SplitInfo
+	for _, count := range subsets {
+		probability := float64(count) / totalInstances
+		splitInfo -= probability * math.Log2(probability)
+	}
+
+	// Gain Ratio = Information Gain / SplitInfo
+	if splitInfo == 0 {
+		return 0.0 // Prevent division by zero
+	}
+	return informationGain / splitInfo
+}
