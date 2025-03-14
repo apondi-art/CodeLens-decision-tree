@@ -74,6 +74,20 @@ func TestBuildTree(t *testing.T) {
 			expectedClass: "Yes", // Majority class at root
 			expectedError: false,
 		},
+		{
+			name: "Empty dataset",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Outlook", Type: model.Categorical},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      5,
+			expectedClass: "", // No instances, so no prediction
+			expectedError: true,
+		},
 	}
 
 	for _, tt := range tests {
