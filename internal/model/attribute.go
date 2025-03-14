@@ -34,6 +34,7 @@ func (a AttributeType) String() string {
 }
 
 // Split represents a decision split point for an attribute
+// Split represents a decision split point for an attribute
 type Split struct {
 	Attribute      *Attribute      // The attribute being split on
 	Type           string          // "categorical" or "numerical"

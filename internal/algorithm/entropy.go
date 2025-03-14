@@ -80,13 +80,27 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 		if attrValue == nil { // Skip instances with missing attribute values
 			continue
 		}
-		subset, err := SplitDataset(dataset, attr, attrValue)
+
+		// Create a Split struct
+		split := &model.Split{
+			Attribute: attr,
+			Type:      attr.Type.String(), // Convert AttributeType to string
+			Value:     attrValue,
+		}
+
+		// Handle categorical splits by adding a map
+		if attr.Type == model.Categorical {
+			split.CategoricalMap = map[string]bool{attrValue.(string): true}
+		}
+
+		subset, err := SplitDataset(dataset, split)
 		if err != nil {
 			continue // Handle error appropriately
 		}
 		subsets[attrValue] = subset
 	}
 
+	// Compute weighted entropy
 	var weightedEntropy float64
 	totalInstances := float64(len(dataset.RowInstances))
 	for _, subDataset := range subsets {
@@ -94,8 +108,10 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 		weightedEntropy += subsetProbability * CalculateEntropy(subDataset, targetAttr)
 	}
 
+	// Round result to avoid floating-point precision errors
 	return math.Round((originalEntropy-weightedEntropy)*1e6) / 1e6
 }
+
 
 // CalculateGainRatio computes the gain ratio of splitting a dataset on a given attribute.
 // Gain ratio is an improvement over information gain that normalizes for the number of possible splits.
