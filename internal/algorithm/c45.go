@@ -8,6 +8,11 @@ import (
 
 // BuildTree constructs a decision tree using the C4.5 algorithm.
 func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr string, depth int, maxDepth int) (*model.Node, error) {
+	// Check for empty dataset.
+	if len(dataset.RowInstances) == 0 {
+		return nil, errors.New("dataset is empty")
+	}
+	
 	// Base case: If the dataset is pure or no attributes are left, return a leaf node.
 	if dataset.IsPure() || len(attributes) == 0 || depth >= maxDepth {
 		majorityClass := dataset.GetMajorityClass()
