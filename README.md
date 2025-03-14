@@ -13,6 +13,7 @@ This project is a scalable, high-performance implementation of the C4.5 decision
 - [API Reference](#api-reference)
 - [Development](#development)
 - [Testing](#testing)
+- [Contributors](#contributors)
 - [Contributing Guidelines](#contributing-guidelines)
 - [License](#license)
 
@@ -249,20 +250,25 @@ func SerializeTree(tree *model.DecisionTree, path string) error
 func DeserializeTree(path string) (*model.DecisionTree, error)
 ```
 
-## Development
-Collaborators
-This project is maintained by the following contributors:
+## Contributors
 
+We appreciate the efforts of our contributors. Connect with them on LinkedIn and GitHub:
 
-- [Stephen Kisengese](https://learn.zone01kisumu.ke/git/skisenge)
-- [Quinter Ochieng](https://learn.zone01kisumu.ke/git/QuinterOchieng)
-- [Samuel Omulo](https://learn.zone01kisumu.ke/git/somulo)
-- [Antony Musumba](https://learn.zone01kisumu.ke/git/antomusumba)
+- [![Stephen Kisengese](https://img.shields.io/badge/LinkedIn-Stephen%20Kisengese-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/skisenge) 
+  [![GitHub](https://img.shields.io/badge/GitHub-skisenge-black?style=flat&logo=github)](https://learn.zone01kisumu.ke/git/skisenge)
 
+- [![Quinter Ochieng](https://img.shields.io/badge/LinkedIn-Quinter%20Ochieng-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/quinterochieng) 
+  [![GitHub](https://img.shields.io/badge/GitHub-QuinterOchieng-black?style=flat&logo=github)](https://learn.zone01kisumu.ke/git/QuinterOchieng)
 
-    ### Contributing Guidelines
+- [![Samuel Omulo](https://img.shields.io/badge/LinkedIn-Samuel%20Omulo-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/samuel-omulo-634694261) 
+  [![GitHub](https://img.shields.io/badge/GitHub-somulo1-black?style=flat&logo=github)](https://github.com/somulo1)
 
-    We welcome contributions from everyone! To get started, please follow these steps:
+- [![Antony Musumba](https://img.shields.io/badge/LinkedIn-Antony%20Musumba-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/antonymusumba) 
+  [![GitHub](https://img.shields.io/badge/GitHub-antomusumba-black?style=flat&logo=github)](https://learn.zone01kisumu.ke/git/antomusumba)
+
+### Contributing Guidelines
+
+We welcome contributions from everyone! To get started, please follow these steps:
 
 1. **Fork the repository**: Click the "Fork" button at the top right of the repository page to create your copy.
 2. **Create a feature branch**: Use a descriptive name for your branch, e.g., `feature/add-new-feature`.
