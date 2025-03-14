@@ -1,5 +1,11 @@
 package model
 
+import (
+	"fmt"
+	"math"
+	"sort"
+)
+
 type AttributeType int
 
 const (
@@ -51,5 +57,113 @@ func (a *Attribute) CalculateGainRatio(dataset *Dataset) float64 {
 }
 
 func (a *Attribute) FindBestSplit(dataset *Dataset) (Split, float64) {
-	return Split{}, 0.0
+	split := Split{
+		Attribute: a,
+		GainRatio: 0,
+	}
+
+	gainRatio := a.CalculateGainRatio(dataset)
+
+	if a.Type == Numeric {
+		// For numeric attributes, find the best split point
+		threshold, err := a.findBestNumericSplit(dataset)
+		if err == nil && threshold != nil {
+			split.Type = "numerical"
+			split.Value = *threshold
+			split.GainRatio = gainRatio
+		}
+	} else {
+		// For categorical attributes
+		split.Type = "categorical"
+		split.CategoricalMap = make(map[string]bool)
+
+		// Get all unique values for the attribute
+		uniqueValues := dataset.GetUniqueValues(a.Name)
+		for _, val := range uniqueValues {
+			if strVal, ok := val.(string); ok {
+				split.CategoricalMap[strVal] = true
+			}
+		}
+
+		split.GainRatio = gainRatio
+	}
+
+	return split, gainRatio
+}
+
+// findBestNumericSplit finds the best threshold for a numeric attribute
+func (a *Attribute) findBestNumericSplit(dataset *Dataset) (*float64, error) {
+	if a.Type != Numeric {
+		return nil, fmt.Errorf("attribute '%s' is not numeric", a.Name)
+	}
+
+	values, err := dataset.GetNumericValues(a.Name)
+	if err != nil || len(values) <= 1 {
+		return nil, fmt.Errorf("insufficient numeric values for attribute '%s'", a.Name)
+	}
+
+	// Sort the values
+	sort.Float64s(values)
+
+	// Find potential split points (midpoints between adjacent distinct values)
+	var splitPoints []float64
+	for i := 0; i < len(values)-1; i++ {
+		if values[i] != values[i+1] {
+			splitPoints = append(splitPoints, (values[i]+values[i+1])/2)
+		}
+	}
+
+	if len(splitPoints) == 0 {
+		return nil, fmt.Errorf("no valid split points for attribute '%s'", a.Name)
+	}
+
+	// Evaluate each split point
+	bestGainRatio := -1.0
+	var bestThreshold *float64
+
+	for _, threshold := range splitPoints {
+		// Split the dataset
+		subsets, err := dataset.SplitByNumericThreshold(a.Name, threshold)
+		if err != nil || len(subsets) <= 1 {
+			continue
+		}
+
+		// Calculate class entropy before split
+		classEntropy := dataset.CalculateClassEntropy()
+
+		// Calculate weighted entropy after split
+		weightedEntropy := 0.0
+		splitInfo := 0.0
+
+		for _, subset := range subsets {
+			if subset.TotalRows == 0 {
+				continue
+			}
+
+			weight := float64(subset.TotalRows) / float64(dataset.TotalRows)
+			weightedEntropy += weight * subset.CalculateClassEntropy()
+
+			// Calculate split information for gain ratio
+			splitInfo -= weight * math.Log2(weight)
+		}
+
+		// Calculate information gain
+		infoGain := classEntropy - weightedEntropy
+
+		// Avoid division by zero
+		if splitInfo == 0 {
+			continue
+		}
+
+		// Calculate gain ratio
+		gainRatio := infoGain / splitInfo
+
+		if gainRatio > bestGainRatio {
+			bestGainRatio = gainRatio
+			thresholdCopy := threshold
+			bestThreshold = &thresholdCopy
+		}
+	}
+
+	return bestThreshold, nil
 }
