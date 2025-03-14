@@ -2,6 +2,20 @@ package model
 
 import "math"
 
+// DatasetInterface defines the methods required for a dataset
+type DatasetInterface interface {
+	CountClassInstances() map[string]int
+	GetUniqueValues(attr string) []interface{}
+	GetNumericValues(attr string) ([]float64, error)
+	CalculateClassEntropy() float64
+	IsPure() bool
+	GetMajorityClass() string
+	SplitByNumericThreshold(attr string, threshold float64) (map[interface{}]*Dataset, error)
+	SplitByCategoricalValue(attr string) (map[interface{}]*Dataset, error)
+	FilterByAttributeValue(attr string, value interface{}) *Dataset
+	GetRowInstances() []map[string]interface{}
+}
+
 // Dataset represents a collection of instances with attributes
 type Dataset struct {
 	RowInstances     []map[string]interface{} // Data instances stored as key-value pair(map[column name]rowvalue)
@@ -12,6 +26,9 @@ type Dataset struct {
 	TotalRows        int                      // Number of rows in dataset
 	NonTargetColumns int                      // Number of attributes (excluding target)
 }
+
+// Ensure Dataset implements DatasetInterface
+var _ DatasetInterface = (*Dataset)(nil)
 
 // NewDataset creates a new dataset from raw data
 func NewDataset(data [][]string, headers []string, attrTypes map[string]AttributeType) (*Dataset, error) {
@@ -25,7 +42,24 @@ func (d *Dataset) Clone() *Dataset {
 
 // FilterByAttributeValue returns a subset of the dataset where attr has specified value
 func (d *Dataset) FilterByAttributeValue(attr string, value interface{}) *Dataset {
-	return &Dataset{}
+	subset := &Dataset{
+		RowInstances:     []map[string]interface{}{},
+		ColumnAttributes: d.ColumnAttributes,
+		ColumnNames:      d.ColumnNames,
+		TargetColumn:     d.TargetColumn,
+		TargetOccurrence: make(map[string]int), // Initialize the map
+		TotalRows:        0,
+		NonTargetColumns: d.NonTargetColumns,
+	}
+
+	for _, instance := range d.RowInstances {
+		if val, exists := instance[attr]; exists && val == value {
+			subset.RowInstances = append(subset.RowInstances, instance)
+			subset.TargetOccurrence[d.TargetColumn]++ // Update target occurrence
+		}
+	}
+	subset.TotalRows = len(subset.RowInstances)
+	return subset
 }
 
 // FilterByNumericCondition returns subset where numeric attr meets condition (>, <, etc.)
@@ -196,4 +230,9 @@ func (d *Dataset) SplitWithMissingValues(attr string, numericThreshold *float64)
 // ApplyPreprocessing applies any necessary preprocessing steps to the dataset
 func (d *Dataset) ApplyPreprocessing() error {
 	return nil
+}
+
+// GetRowInstances returns the row instances of the dataset.
+func (d *Dataset) GetRowInstances() []map[string]interface{} {
+	return d.RowInstances
 }
