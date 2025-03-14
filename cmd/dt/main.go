@@ -1,17 +1,15 @@
 package main
 
 import (
+	"CodeLens-decision-tree/internal/data"
+	"CodeLens-decision-tree/internal/model"
+	"CodeLens-decision-tree/internal/serialization"
 	"encoding/csv"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-
-	"CodeLens-decision-tree/internal/algorithm"
-	"CodeLens-decision-tree/internal/data"
-	"CodeLens-decision-tree/internal/model"
-	"CodeLens-decision-tree/internal/serialization"
 )
 
 // Flags holds the command-line arguments.
@@ -58,7 +56,7 @@ func ParseFlags() (string, string, string, string, string, error) {
 }
 
 // executeTrainCommand trains a decision tree model and saves it.
-func ExecuteTrainCommand(inputPath, targetColumn, outputPath string) error {
+func ExecuteTrainCommand(inputPath string, targetColumn string, outputPath string) error {
 	// Load the dataset.
 	dataset, err := data.GenerateCSVData(inputPath, targetColumn)
 	if err != nil {
@@ -78,16 +76,16 @@ func ExecuteTrainCommand(inputPath, targetColumn, outputPath string) error {
 
 	// Train decision tree.
 	maxDepth := 10
-	tree, err := algorithm.BuildTree(dataset, attributes, targetColumn, 0, maxDepth)
+	dt := &model.DecisionTree{}
+	err = dt.Train(dataset, attributes, targetColumn, maxDepth)
 	if err != nil {
 		return fmt.Errorf("failed to build decision tree: %v", err)
 	}
 
 	// Save model.
-	if err := serialization.SerializeTree(tree, outputPath); err != nil {
+	if err := serialization.SerializeTree(dt, outputPath); err != nil {
 		return fmt.Errorf("failed to save model: %v", err)
 	}
-
 	fmt.Println("Training completed successfully. Model saved to:", outputPath)
 	return nil
 }
@@ -102,7 +100,7 @@ func extractAttributes(dataset *model.Dataset) []*model.Attribute {
 }
 
 // ExecutePredictCommand loads a trained model and makes predictions.
-func ExecutePredictCommand(inputPath, modelPath, outputPath string) error {
+func ExecutePredictCommand(inputPath string, modelPath string, outputPath string) error {
 	// Load trained model.
 	tree, err := serialization.DeserializeTree(modelPath)
 	if err != nil {
@@ -112,13 +110,13 @@ func ExecutePredictCommand(inputPath, modelPath, outputPath string) error {
 	// Load input dataset.
 	dataset, err := data.GenerateCSVData(inputPath, tree.TargetAttr)
 	if err != nil {
-		return fmt.Errorf("failed to load dataset: %v", err)
+		return fmt.Errorf("failed to load dataset: %v - %v", err, tree.TargetAttr)
 	}
 
 	// Make predictions.
 	predictions := make([]string, len(dataset.RowInstances))
 	for i, instance := range dataset.RowInstances {
-		predictions[i] = tree.Root.Predict(instance)
+		predictions[i] = tree.Predict(instance)
 	}
 
 	// Save predictions.
