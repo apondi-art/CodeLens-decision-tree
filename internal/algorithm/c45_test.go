@@ -51,6 +51,29 @@ func TestBuildTree(t *testing.T) {
 			expectedClass: "No", // Temperature <= 82.5 -> No
 			expectedError: false,
 		},
+		{
+			name: "Maximum depth reached",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Outlook": "Sunny", "PlayTennis": "No"},
+					{"Outlook": "Rain", "PlayTennis": "Yes"},
+					{"Outlook": "Sunny", "PlayTennis": "Yes"},
+					{"Outlook": "Rain", "PlayTennis": "No"},
+					{"Outlook": "Overcast", "PlayTennis": "Yes"},
+					{"Outlook": "Sunny", "PlayTennis": "Yes"},
+					{"Outlook": "Overcast", "PlayTennis": "No"},
+					{"Outlook": "Rain", "PlayTennis": "Yes"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Outlook", Type: model.Categorical},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      0,     // Tree stops at depth 0
+			expectedClass: "Yes", // Majority class at root
+			expectedError: false,
+		},
 	}
 
 	for _, tt := range tests {
