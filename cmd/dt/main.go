@@ -1,34 +1,49 @@
 package main
 
 import (
+	"errors"
 	"flag"
 )
 
 // Flags holds the command-line arguments.
 type Flags struct {
-	Command      string // Specifies the action: "train" or "predict"
-	InputFile    string // Path to the input CSV file (training or prediction data)
-	TargetColumn string // Column containing target labels (only for training)
-	OutputPath   string // Path to save the output file (model or predictions)
-	TrainedFile  string // Path to the trained decision tree model file (used for prediction)
+	Command      string
+	InputFile    string
+	TargetColumn string
+	OutputPath   string
+	TrainedFile  string
 }
 
-var cmdFlags Flags // Global variable to store parsed flags
+var CmdFlags Flags // Global variable for parsed flags
 
-// init initializes the command-line flags
+// init initializes command-line flags.
 func init() {
-	flag.StringVar(&cmdFlags.Command, "c", "", "Command: train or predict")
-	flag.StringVar(&cmdFlags.InputFile, "i", "", "Path to input CSV file")
-	flag.StringVar(&cmdFlags.TargetColumn, "t", "", "Name of target column (only for training)")
-	flag.StringVar(&cmdFlags.OutputPath, "o", "", "Path to save output (model or predictions)")
-	flag.StringVar(&cmdFlags.TrainedFile, "m", "", "Path to trained model file (only for prediction)")
+	flag.StringVar(&CmdFlags.Command, "c", "", "Command: train or predict")
+	flag.StringVar(&CmdFlags.InputFile, "i", "", "Path to input CSV file")
+	flag.StringVar(&CmdFlags.TargetColumn, "t", "", "Name of target column (only for training)")
+	flag.StringVar(&CmdFlags.OutputPath, "o", "", "Path to save output (model or predictions)")
+	flag.StringVar(&CmdFlags.TrainedFile, "m", "", "Path to trained model file (only for prediction)")
 }
 
-// main parses the flags and prints the values
-func main() {
-	flag.Parse() // Parse command-line flags
-}
+// ParseFlags validates and returns the parsed flag values.
+func ParseFlags() (string, string, string, string, string, error) {
+	flag.Parse()
 
-func executeTrainCommand(inputPath, targetColumn, outputPath string) error
-func executePredictCommand(inputPath, modelPath, outputPath string) error
-func parseFlags() (command string, inputPath string, targetColumn string, modelPath string, outputPath string, err error)
+	if CmdFlags.Command != "train" && CmdFlags.Command != "predict" {
+		return "", "", "", "", "", errors.New("invalid command: must be 'train' or 'predict'")
+	}
+	if CmdFlags.InputFile == "" {
+		return "", "", "", "", "", errors.New("input file path is required")
+	}
+	if CmdFlags.OutputPath == "" {
+		return "", "", "", "", "", errors.New("output path is required")
+	}
+	if CmdFlags.Command == "train" && CmdFlags.TargetColumn == "" {
+		return "", "", "", "", "", errors.New("target column is required for training")
+	}
+	if CmdFlags.Command == "predict" && CmdFlags.TrainedFile == "" {
+		return "", "", "", "", "", errors.New("trained model file is required for prediction")
+	}
+
+	return CmdFlags.Command, CmdFlags.InputFile, CmdFlags.TargetColumn, CmdFlags.TrainedFile, CmdFlags.OutputPath, nil
+}
