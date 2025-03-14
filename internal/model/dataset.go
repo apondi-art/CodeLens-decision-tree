@@ -78,7 +78,12 @@ func (d *Dataset) CalculateClassEntropy() float64 {
 
 // IsPure returns true if all instances belong to the same class
 func (d *Dataset) IsPure() bool {
-	return false
+	if d.TotalRows == 0 {
+		return true
+	}
+
+	classCounts := d.CountClassInstances()
+	return len(classCounts) == 1
 }
 
 // GetMajorityClass returns the most frequent class in the dataset
