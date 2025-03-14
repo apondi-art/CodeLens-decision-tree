@@ -109,7 +109,7 @@ func TestBuildTree(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tree, err := BuildTree(tt.dataset, tt.attributes, tt.targetAttr, 0, tt.maxDepth)
+			tree, err := model.BuildTree(tt.dataset, tt.attributes, tt.targetAttr, 0, tt.maxDepth)
 
 			if tt.expectedError {
 				if err == nil {
@@ -185,7 +185,7 @@ func TestSelectBestAttribute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			attr, gain := SelectBestAttribute(tt.dataset, tt.attributes, tt.target)
+			attr, gain := SelectBestAttribute(&tt.dataset, tt.attributes, tt.target)
 			if attr != nil && attr.Name != tt.expectedAttr {
 				t.Errorf("SelectBestAttribute() attribute = %v, expected %v", attr.Name, tt.expectedAttr)
 			}
