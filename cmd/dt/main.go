@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"CodeLens-decision-tree/internal/algorithm"
@@ -149,4 +150,29 @@ func savePredictions(predictions []string, outputPath string) error {
 	}
 
 	return nil
+}
+
+func main() {
+	// Parse CLI flags.
+	command, inputPath, targetColumn, modelPath, outputPath, err := ParseFlags()
+	if err != nil {
+		log.Fatalf("Error parsing flags: %v", err)
+	}
+
+	// Execute the appropriate command.
+	switch command {
+	case "train":
+		err = ExecuteTrainCommand(inputPath, targetColumn, outputPath)
+	case "predict":
+		err = ExecutePredictCommand(inputPath, modelPath, outputPath)
+	default:
+		log.Fatalf("Invalid command: %s", command)
+	}
+
+	// Handle errors.
+	if err != nil {
+		log.Fatalf("Error executing command: %v", err)
+	}
+
+	fmt.Println("Command executed successfully.")
 }
