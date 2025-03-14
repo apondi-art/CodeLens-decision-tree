@@ -1,5 +1,7 @@
 package model
 
+import "math"
+
 // Dataset represents a collection of instances with attributes
 type Dataset struct {
 	RowInstances     []map[string]interface{} // Data instances stored as key-value pair(map[column name]rowvalue)
@@ -73,17 +75,54 @@ func (d *Dataset) GetNumericValues(attr string) ([]float64, error) {
 
 // CalculateClassEntropy calculates the entropy of the target attribute
 func (d *Dataset) CalculateClassEntropy() float64 {
-	return 0
+	if d.TotalRows == 0 {
+		return 0
+	}
+
+	// Count occurrences of each class
+	classCounts := d.CountClassInstances()
+
+	// Calculate entropy
+	entropy := 0.0
+	for _, count := range classCounts {
+		if count > 0 {
+			probability := float64(count) / float64(d.TotalRows)
+			entropy -= probability * math.Log2(probability)
+		}
+	}
+
+	return entropy
 }
 
 // IsPure returns true if all instances belong to the same class
 func (d *Dataset) IsPure() bool {
-	return false
+	if d.TotalRows == 0 {
+		return true
+	}
+
+	classCounts := d.CountClassInstances()
+	return len(classCounts) == 1
 }
 
 // GetMajorityClass returns the most frequent class in the dataset
 func (d *Dataset) GetMajorityClass() string {
-	return ""
+	classCounts := d.CountClassInstances()
+
+	if len(classCounts) == 0 {
+		return ""
+	}
+
+	majorityClass := ""
+	maxCount := 0
+
+	for class, count := range classCounts {
+		if count > maxCount {
+			maxCount = count
+			majorityClass = class
+		}
+	}
+
+	return majorityClass
 }
 
 // func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[string]*Dataset, error)

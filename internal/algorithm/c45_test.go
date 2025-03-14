@@ -33,6 +33,78 @@ func TestBuildTree(t *testing.T) {
 			expectedClass: "No", // All instances belong to the same class
 			expectedError: false,
 		},
+		{
+			name: "Numerical attribute",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Temperature": 85.0, "PlayTennis": "No"},
+					{"Temperature": 80.0, "PlayTennis": "Yes"},
+					{"Temperature": 83.0, "PlayTennis": "No"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Temperature", Type: model.Numeric},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      5,
+			expectedClass: "No", // Temperature <= 82.5 -> No
+			expectedError: false,
+		},
+		{
+			name: "Maximum depth reached",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Outlook": "Sunny", "PlayTennis": "No"},
+					{"Outlook": "Rain", "PlayTennis": "Yes"},
+					{"Outlook": "Sunny", "PlayTennis": "Yes"},
+					{"Outlook": "Rain", "PlayTennis": "No"},
+					{"Outlook": "Overcast", "PlayTennis": "Yes"},
+					{"Outlook": "Sunny", "PlayTennis": "Yes"},
+					{"Outlook": "Overcast", "PlayTennis": "No"},
+					{"Outlook": "Rain", "PlayTennis": "Yes"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Outlook", Type: model.Categorical},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      0,     // Tree stops at depth 0
+			expectedClass: "Yes", // Majority class at root
+			expectedError: false,
+		},
+		{
+			name: "Empty dataset",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Outlook", Type: model.Categorical},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      5,
+			expectedClass: "", // No instances, so no prediction
+			expectedError: true,
+		},
+		{
+			name: "Single attribute",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Outlook": "Sunny", "PlayTennis": "No"},
+					{"Outlook": "Rain", "PlayTennis": "Yes"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Outlook", Type: model.Categorical},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      5,
+			expectedClass: "No", // Outlook=Sunny -> No
+			expectedError: false,
+		},
 	}
 
 	for _, tt := range tests {
