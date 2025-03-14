@@ -12,7 +12,7 @@ func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr
 	if len(dataset.RowInstances) == 0 {
 		return nil, errors.New("dataset is empty")
 	}
-	
+
 	// Base case: If the dataset is pure or no attributes are left, return a leaf node.
 	if dataset.IsPure() || len(attributes) == 0 || depth >= maxDepth {
 		majorityClass := dataset.GetMajorityClass()

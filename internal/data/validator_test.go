@@ -111,7 +111,6 @@ func TestValidateTargetColumn(t *testing.T) {
 	}
 }
 
-
 // TestValidateDataCompleteness - Tests if dataset has enough valid data
 func TestValidateDataCompleteness(t *testing.T) {
 	tests := []struct {
