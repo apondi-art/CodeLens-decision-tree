@@ -19,7 +19,7 @@ func TestSplitDataset(t *testing.T) {
 	}
 
 	split := &model.Split{
-		Attribute:    &model.Attribute{Name: "attribute"},
+		Attribute:      &model.Attribute{Name: "attribute"},
 		CategoricalMap: map[string]bool{"value1": true},
 	}
 
@@ -86,7 +86,7 @@ func TestSplitDatasetWithMissingAttribute(t *testing.T) {
 	}
 
 	split := &model.Split{
-		Attribute:    &model.Attribute{Name: "attribute"},
+		Attribute:      &model.Attribute{Name: "attribute"},
 		CategoricalMap: map[string]bool{"A": true},
 	}
 
