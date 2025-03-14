@@ -52,10 +52,68 @@ type Attribute struct {
 	// Additional fields as needed
 }
 
+// CalculateGainRatio calculates the gain ratio for an attribute
 func (a *Attribute) CalculateGainRatio(dataset *Dataset) float64 {
-	return 0.0
+	if dataset.TotalRows == 0 {
+		return 0
+	}
+
+	// Calculate the entropy of the class distribution before the split
+	classEntropy := dataset.CalculateClassEntropy()
+	if classEntropy == 0 {
+		return 0 // If the dataset is pure, there's no information gain
+	}
+
+	var subsets map[interface{}]*Dataset
+	var err error
+
+	// Get the subsets based on the attribute type
+	if a.Type == Numeric {
+		// For numeric attributes, find the best split point
+		threshold, _ := a.findBestNumericSplit(dataset)
+		if threshold != nil {
+			subsets, err = dataset.SplitByNumericThreshold(a.Name, *threshold) // Dereference threshold
+		}
+	} else {
+		// For categorical attributes, split by each value
+		subsets, err = dataset.SplitByCategoricalValue(a.Name)
+	}
+
+	if err != nil || len(subsets) <= 1 {
+		return 0
+	}
+
+	// Calculate weighted entropy after the split
+	weightedEntropy := 0.0
+	splitInfo := 0.0
+
+	for _, subset := range subsets {
+		if subset.TotalRows == 0 {
+			continue
+		}
+
+		weight := float64(subset.TotalRows) / float64(dataset.TotalRows)
+		weightedEntropy += weight * subset.CalculateClassEntropy()
+
+		// Calculate split information for gain ratio
+		splitInfo -= weight * math.Log2(weight)
+	}
+
+	// Calculate information gain
+	infoGain := classEntropy - weightedEntropy
+
+	// Avoid division by zero
+	if splitInfo == 0 {
+		return 0
+	}
+
+	// Calculate gain ratio
+	gainRatio := infoGain / splitInfo
+
+	return gainRatio
 }
 
+// FindBestSplit finds the best split for an attribute
 func (a *Attribute) FindBestSplit(dataset *Dataset) (Split, float64) {
 	split := Split{
 		Attribute: a,
