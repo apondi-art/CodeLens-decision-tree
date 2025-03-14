@@ -4,14 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"CodeLens-decision-tree/internal/model"
 )
 
-
-
+// GenerateCSVData reads a CSV file, processes data using parsers, and returns a structured dataset.
 func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -20,7 +18,7 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 	defer file.Close()
 
 	dataset := &model.Dataset{
-		RowInstances:    []map[string]interface{}{},
+		RowInstances:     []map[string]interface{}{},
 		ColumnAttributes: make(map[string]*model.Attribute),
 		TargetOccurrence: make(map[string]int),
 	}
@@ -41,7 +39,7 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 			Type:           model.Unknown,
 			PossibleValues: []interface{}{},
 			Min:            1e9,
-			Max:           -1e9,
+			Max:            -1e9,
 			MissingCount:   0,
 		}
 	}
@@ -80,7 +78,8 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 				continue
 			}
 
-			if numericVal, err := strconv.ParseFloat(value, 64); err == nil {
+			// Try parsing as a numerical value
+			if numericVal, err := ParseNumerical(value); err == nil {
 				rowInstance[colName] = numericVal
 				attr.Type = model.Numeric
 
@@ -90,8 +89,19 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 				if numericVal > attr.Max {
 					attr.Max = numericVal
 				}
-			} else {
-				rowInstance[colName] = value
+				continue
+			}
+
+			// Try parsing as a timestamp
+			if timestampVal, err := ParseTimestamp(value); err == nil {
+				rowInstance[colName] = timestampVal
+				attr.Type = model.Timestamp
+				continue
+			}
+
+			// Treat as categorical data
+			if categoricalVal, err := ParseCategorical(value); err == nil {
+				rowInstance[colName] = categoricalVal
 				attr.Type = model.Categorical
 
 				// Track unique values using a map for efficiency
@@ -100,10 +110,15 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 					uniqueValues[v.(string)] = struct{}{}
 				}
 
-				if _, exists := uniqueValues[value]; !exists {
-					attr.PossibleValues = append(attr.PossibleValues, value)
+				if _, exists := uniqueValues[categoricalVal]; !exists {
+					attr.PossibleValues = append(attr.PossibleValues, categoricalVal)
 				}
+				continue
 			}
+
+			// If all parsing attempts fail, mark as missing
+			rowInstance[colName] = nil
+			attr.MissingCount++
 		}
 
 		dataset.RowInstances = append(dataset.RowInstances, rowInstance)
@@ -125,6 +140,3 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 
 	return dataset, nil
 }
-// func InferDataTypes(data [][]string) (map[string]string, error)
-// func HandleMissingValues(dataset *model.Dataset) error
-//
