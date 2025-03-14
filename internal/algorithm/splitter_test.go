@@ -6,6 +6,7 @@ import (
 )
 
 func TestSplitDataset(t *testing.T) {
+	// Test for correct splitting by a given attribute and value
 	dataset := &model.Dataset{
 		RowInstances: []map[string]interface{}{
 			{"attribute": "value1"},
@@ -13,14 +14,16 @@ func TestSplitDataset(t *testing.T) {
 			{"attribute": "value1"},
 		},
 		ColumnAttributes: map[string]*model.Attribute{
-			"attribute": {Name: "attribute"},
+			"attribute": {Name: "attribute", Type: model.Categorical},
 		},
 	}
 
-	attr := &model.Attribute{Name: "attribute"}
-	value := "value1"
+	split := &model.Split{
+		Attribute:    &model.Attribute{Name: "attribute"},
+		CategoricalMap: map[string]bool{"value1": true},
+	}
 
-	subset, err := SplitDataset(dataset, attr, value)
+	subset, err := SplitDataset(dataset, split)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -30,29 +33,74 @@ func TestSplitDataset(t *testing.T) {
 }
 
 func TestSplitDatasetNilDataset(t *testing.T) {
-	attr := &model.Attribute{Name: "attribute"}
-	_, err := SplitDataset(nil, attr, "value")
+	// Test for nil dataset
+	split := &model.Split{
+		Attribute: &model.Attribute{Name: "attribute"},
+	}
+	_, err := SplitDataset(nil, split)
 	if err == nil {
 		t.Fatal("expected error for nil dataset, got none")
 	}
 }
 
-func TestSplitDatasetNilAttribute(t *testing.T) {
+func TestSplitDatasetNilSplit(t *testing.T) {
+	// Test for nil split
 	dataset := &model.Dataset{
 		RowInstances: []map[string]interface{}{
 			{"attribute": "value1"},
 		},
-		ColumnAttributes: map[string]*model.Attribute{
-			"attribute": {Name: "attribute"},
+	}
+	_, err := SplitDataset(dataset, nil)
+	if err == nil {
+		t.Fatal("expected error for nil split, got none")
+	}
+}
+
+func TestSplitDatasetNilAttribute(t *testing.T) {
+	// Test for nil attribute
+	dataset := &model.Dataset{
+		RowInstances: []map[string]interface{}{
+			{"attribute": "value1"},
 		},
 	}
-	_, err := SplitDataset(dataset, nil, "value")
+	split := &model.Split{
+		Attribute: nil,
+	}
+	_, err := SplitDataset(dataset, split)
 	if err == nil {
 		t.Fatal("expected error for nil attribute, got none")
 	}
 }
 
+func TestSplitDatasetWithMissingAttribute(t *testing.T) {
+	// Test for dataset with missing attribute values
+	dataset := &model.Dataset{
+		RowInstances: []map[string]interface{}{
+			{"attribute": "A"},
+			{"attribute": nil},
+			{"attribute": "B"},
+		},
+		ColumnAttributes: map[string]*model.Attribute{
+			"attribute": {Name: "attribute", Type: model.Categorical},
+		},
+	}
+
+	split := &model.Split{
+		Attribute:    &model.Attribute{Name: "attribute"},
+		CategoricalMap: map[string]bool{"A": true},
+	}
+
+	subset, err := SplitDataset(dataset, split)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+	if len(subset.RowInstances) != 1 {
+		t.Errorf("Expected 1 instance, got %d", len(subset.RowInstances))
+	}
+}
+
 func TestFindBestNumericalSplit(t *testing.T) {
+	// Test to find best numerical split
 	dataset := &model.Dataset{
 		RowInstances: []map[string]interface{}{
 			{"numerical": 1.0, "target": "A"},
@@ -60,18 +108,22 @@ func TestFindBestNumericalSplit(t *testing.T) {
 			{"numerical": 3.0, "target": "A"},
 		},
 		ColumnAttributes: map[string]*model.Attribute{
-			"attribute": {Name: "attribute"},
+			"numerical": {Name: "numerical", Type: model.Numeric},
+			"target":    {Name: "target", Type: model.Categorical},
 		},
 	}
 
 	attr := &model.Attribute{Name: "numerical"}
-	threshold, gain := FindBestNumericalSplit(dataset, attr, "target")
+	targetAttr := "target"
+
+	threshold, gain := FindBestNumericalSplit(dataset, attr, targetAttr)
 	if threshold == 0 || gain == 0 {
 		t.Fatal("expected valid threshold and gain")
 	}
 }
 
 func TestDistributeInstance(t *testing.T) {
+	// Test for distributing an instance to child nodes
 	instance := map[string]interface{}{"attribute": "value1"}
 	children := map[interface{}]*model.Node{
 		"value1": {Attribute: &model.Attribute{Name: "attribute"}},
@@ -85,6 +137,7 @@ func TestDistributeInstance(t *testing.T) {
 }
 
 func TestComputeInformationGain(t *testing.T) {
+	// Test for computing information gain
 	dataset := &model.Dataset{
 		RowInstances: []map[string]interface{}{
 			{"numerical": 1.0, "target": "A"},
@@ -92,7 +145,8 @@ func TestComputeInformationGain(t *testing.T) {
 			{"numerical": 3.0, "target": "A"},
 		},
 		ColumnAttributes: map[string]*model.Attribute{
-			"attribute": {Name: "attribute"},
+			"numerical": {Name: "numerical", Type: model.Numeric},
+			"target":    {Name: "target", Type: model.Categorical},
 		},
 	}
 
@@ -106,20 +160,24 @@ func TestComputeInformationGain(t *testing.T) {
 	}
 }
 
-// test edge case or missing data
-func TestSplitDatasetWithMissingAttribute(t *testing.T) {
+func TestFindBestNumericalSplitWithNoGain(t *testing.T) {
+	// Test when no gain is found
 	dataset := &model.Dataset{
 		RowInstances: []map[string]interface{}{
-			{"attribute": "A"},
-			{"attribute": nil},
-			{"attribute": "B"},
+			{"numerical": 1.0, "target": "A"},
+			{"numerical": 1.0, "target": "B"},
+		},
+		ColumnAttributes: map[string]*model.Attribute{
+			"numerical": {Name: "numerical", Type: model.Numeric},
+			"target":    {Name: "target", Type: model.Categorical},
 		},
 	}
-	subset, err := SplitDataset(dataset, &model.Attribute{Name: "attribute"}, "A")
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
-	if len(subset.RowInstances) != 1 {
-		t.Errorf("Expected 1 instance, got %d", len(subset.RowInstances))
+
+	attr := &model.Attribute{Name: "numerical"}
+	targetAttr := "target"
+
+	threshold, gain := FindBestNumericalSplit(dataset, attr, targetAttr)
+	if threshold != 0 || gain != 0 {
+		t.Fatal("expected no gain, got some")
 	}
 }
