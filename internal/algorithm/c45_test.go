@@ -33,6 +33,24 @@ func TestBuildTree(t *testing.T) {
 			expectedClass: "No", // All instances belong to the same class
 			expectedError: false,
 		},
+		{
+			name: "Numerical attribute",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Temperature": 85.0, "PlayTennis": "No"},
+					{"Temperature": 80.0, "PlayTennis": "Yes"},
+					{"Temperature": 83.0, "PlayTennis": "No"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Temperature", Type: model.Numeric},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      5,
+			expectedClass: "No", // Temperature <= 82.5 -> No
+			expectedError: false,
+		},
 	}
 
 	for _, tt := range tests {
