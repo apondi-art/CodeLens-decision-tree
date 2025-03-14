@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 
 	"CodeLens-decision-tree/internal/algorithm"
 	"CodeLens-decision-tree/internal/data"
@@ -96,4 +98,55 @@ func extractAttributes(dataset *model.Dataset) []*model.Attribute {
 		attributes = append(attributes, attr)
 	}
 	return attributes
+}
+
+// ExecutePredictCommand loads a trained model and makes predictions.
+func ExecutePredictCommand(inputPath, modelPath, outputPath string) error {
+	// Load trained model.
+	tree, err := serialization.DeserializeTree(modelPath)
+	if err != nil {
+		return fmt.Errorf("failed to load model: %v", err)
+	}
+
+	// Load input dataset.
+	dataset, err := data.GenerateCSVData(inputPath, tree.TargetAttr)
+	if err != nil {
+		return fmt.Errorf("failed to load dataset: %v", err)
+	}
+
+	// Make predictions.
+	predictions := make([]string, len(dataset.RowInstances))
+	for i, instance := range dataset.RowInstances {
+		predictions[i] = tree.Root.Predict(instance)
+	}
+
+	// Save predictions.
+	err = savePredictions(predictions, outputPath)
+	if err != nil {
+		return fmt.Errorf("failed to save predictions: %v", err)
+	}
+
+	fmt.Println("Predictions completed successfully. Predictions saved to:", outputPath)
+	return nil
+}
+
+// savePredictions writes predictions to a CSV file.
+func savePredictions(predictions []string, outputPath string) error {
+	file, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %v", err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	for _, prediction := range predictions {
+		err := writer.Write([]string{prediction})
+		if err != nil {
+			return fmt.Errorf("failed to write prediction: %v", err)
+		}
+	}
+
+	return nil
 }
