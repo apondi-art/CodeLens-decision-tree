@@ -88,6 +88,23 @@ func TestBuildTree(t *testing.T) {
 			expectedClass: "", // No instances, so no prediction
 			expectedError: true,
 		},
+		{
+			name: "Single attribute",
+			dataset: &model.Dataset{
+				RowInstances: []map[string]interface{}{
+					{"Outlook": "Sunny", "PlayTennis": "No"},
+					{"Outlook": "Rain", "PlayTennis": "Yes"},
+				},
+				TargetColumn: "PlayTennis",
+			},
+			attributes: []*model.Attribute{
+				{Name: "Outlook", Type: model.Categorical},
+			},
+			targetAttr:    "PlayTennis",
+			maxDepth:      5,
+			expectedClass: "No", // Outlook=Sunny -> No
+			expectedError: false,
+		},
 	}
 
 	for _, tt := range tests {
