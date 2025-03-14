@@ -83,7 +83,23 @@ func (d *Dataset) IsPure() bool {
 
 // GetMajorityClass returns the most frequent class in the dataset
 func (d *Dataset) GetMajorityClass() string {
-	return ""
+	classCounts := d.CountClassInstances()
+
+	if len(classCounts) == 0 {
+		return ""
+	}
+
+	majorityClass := ""
+	maxCount := 0
+
+	for class, count := range classCounts {
+		if count > maxCount {
+			maxCount = count
+			majorityClass = class
+		}
+	}
+
+	return majorityClass
 }
 
 // func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[string]*Dataset, error)
