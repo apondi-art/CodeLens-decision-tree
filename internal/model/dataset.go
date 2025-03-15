@@ -1,6 +1,10 @@
 package model
 
-import "math"
+import (
+	"fmt"
+	"math"
+	"sync"
+)
 
 // Dataset represents a collection of instances with attributes
 type Dataset struct {
@@ -14,8 +18,6 @@ type Dataset struct {
 }
 
 // CountClassInstances counts instances per target class.
-// CountClassInstances counts instances per target class.
-// Optimized with pre-allocation and early returns
 func (d *Dataset) CountClassInstances() map[string]int {
 	// Return cached result if available
 	if d.TargetOccurrence != nil && d.TargetColumn != "" {
@@ -27,9 +29,9 @@ func (d *Dataset) CountClassInstances() map[string]int {
 	if d.TargetOccurrence != nil {
 		estimatedClasses = len(d.TargetOccurrence)
 	}
-	
+
 	classCounts := make(map[string]int, estimatedClasses)
-	
+
 	for _, instance := range d.RowInstances {
 		// Skip if the target column is missing or has a nil value
 		if value, exists := instance[d.TargetColumn]; exists && value != nil {
