@@ -13,38 +13,37 @@ type Dataset struct {
 	NonTargetColumns int                      // Number of attributes (excluding target)
 }
 
-// NewDataset creates a new dataset from raw data
-func NewDataset(data [][]string, headers []string, attrTypes map[string]AttributeType) (*Dataset, error) {
-	return &Dataset{}, nil
-}
-
-// Clone creates a deep copy of the dataset
-func (d *Dataset) Clone() *Dataset {
-	return &Dataset{}
-}
-
-// FilterByAttributeValue returns a subset of the dataset where attr has specified value
-func (d *Dataset) FilterByAttributeValue(attr string, value interface{}) *Dataset {
-	return &Dataset{}
-}
-
-// FilterByNumericCondition returns subset where numeric attr meets condition (>, <, etc.)
-func (d *Dataset) FilterByNumericCondition(attr string, condition string, threshold float64) *Dataset {
-	return &Dataset{}
-}
-
 // CountClassInstances counts instances per target class.
+// CountClassInstances counts instances per target class.
+// Optimized with pre-allocation and early returns
 func (d *Dataset) CountClassInstances() map[string]int {
-	classCounts := make(map[string]int)
+	// Return cached result if available
+	if d.TargetOccurrence != nil && d.TargetColumn != "" {
+		return d.TargetOccurrence
+	}
 
+	// Estimate capacity based on typical number of classes
+	estimatedClasses := 10
+	if d.TargetOccurrence != nil {
+		estimatedClasses = len(d.TargetOccurrence)
+	}
+	
+	classCounts := make(map[string]int, estimatedClasses)
+	
 	for _, instance := range d.RowInstances {
 		// Skip if the target column is missing or has a nil value
 		if value, exists := instance[d.TargetColumn]; exists && value != nil {
-			class := value.(string)
-			classCounts[class]++
+			if class, ok := value.(string); ok {
+				classCounts[class]++
+			}
 		}
 	}
-
+	
+	// Cache the result for future use
+	if d.TargetColumn != "" {
+		d.TargetOccurrence = classCounts
+	}
+	
 	return classCounts
 }
 
@@ -70,6 +69,7 @@ func (d *Dataset) GetUniqueValues(attr string) []interface{} {
 
 // GetNumericValues returns all values for a numeric attribute as floats
 func (d *Dataset) GetNumericValues(attr string) ([]float64, error) {
+	// to populate
 	return []float64{}, nil
 }
 
