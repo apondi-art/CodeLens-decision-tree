@@ -186,7 +186,7 @@ func TestSelectBestAttribute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			attr, gain := SelectBestAttribute(tt.dataset, tt.attributes, tt.target)
+			attr, gain := SelectBestAttribute(&tt.dataset, tt.attributes, tt.target)
 			if attr != nil && attr.Name != tt.expectedAttr {
 				t.Errorf("SelectBestAttribute() attribute = %v, expected %v", attr.Name, tt.expectedAttr)
 			}
@@ -558,8 +558,6 @@ func TestPruneTree(t *testing.T) {
 	}
 }
 
-
-
 func TestSplitDatasetNilDataset(t *testing.T) {
 	// Test for nil dataset
 	split := &model.Split{
@@ -599,8 +597,6 @@ func TestSplitDatasetNilAttribute(t *testing.T) {
 		t.Fatal("expected error for nil attribute, got none")
 	}
 }
-
-
 
 func TestFindBestNumericalSplit(t *testing.T) {
 	// Test to find best numerical split

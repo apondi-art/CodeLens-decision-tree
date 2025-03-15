@@ -8,7 +8,6 @@ import (
 )
 
 // BuildTree constructs a decision tree using the C4.5 algorithm.
-// BuildTree constructs a decision tree using the C4.5 algorithm.
 func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr string, depth int, maxDepth int) (*model.Node, error) {
 	// Check for empty dataset.
 	if len(dataset.RowInstances) == 0 {
@@ -17,7 +16,7 @@ func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr
 
 	// Base case: If the dataset is pure or no attributes are left, return a leaf node.
 	if dataset.IsPure() || len(attributes) == 0 || depth >= maxDepth {
-		majorityClass := GetMajorityClass(dataset)
+		majorityClass := dataset.GetMajorityClass()
 		return &model.Node{
 			IsLeaf:            true,
 			PredictedClass:    majorityClass,
@@ -188,9 +187,3 @@ func MajorityClass(dataset *model.Dataset, targetAttr string) string {
 	}
 	return majorityClass
 }
-
-// Cache for commonly used log2 values to improve entropy calculation performance
-var (
-	log2Cache      = make(map[float64]float64)
-	log2CacheMutex sync.RWMutex
-)

@@ -24,7 +24,7 @@ func PruneTree(root *model.Node, validationSet *model.Dataset, targetAttr string
 	errorWithoutPruning := EstimateError(root, validationSet, targetAttr)
 
 	// Create a leaf node with the majority class of the validation set
-	majorityClass := GetMajorityClass(validationSet) // Using the method here
+	majorityClass := getClassification(validationSet, targetAttr) // Using the method here
 	prunedNode := &model.Node{Class: majorityClass}
 
 	// Estimate the error if we prune this node
@@ -63,41 +63,15 @@ func EstimateError(node *model.Node, dataset *model.Dataset, targetAttr string) 
 
 // getMajorityClass returns the majority class from the dataset based on the target attribute.
 // It counts the occurrences of each class and identifies the one with the highest count.
-// func getMajorityClass(dataset *model.Dataset, targetAttr string) string {
-// 	classCounts := make(map[string]int)
-// 	for _, instance := range dataset.RowInstances {
-// 		class := instance[targetAttr].(string)
-// 		classCounts[class]++
-// 	}
-
-// 	var majorityClass string
-// 	maxCount := 0
-// 	for class, count := range classCounts {
-// 		if count > maxCount {
-// 			maxCount = count
-// 			majorityClass = class
-// 		}
-// 	}
-
-// 	return majorityClass
-// }
-
-func GetMajorityClass(d *model.Dataset) string {
-	// Use cached target occurrence if available
-	var classCounts map[string]int
-	if d.TargetOccurrence != nil {
-		classCounts = d.TargetOccurrence
-	} else {
-		classCounts = d.CountClassInstances()
+func getClassification(dataset *model.Dataset, targetAttr string) string {
+	classCounts := make(map[string]int)
+	for _, instance := range dataset.RowInstances {
+		class := instance[targetAttr].(string)
+		classCounts[class]++
 	}
 
-	if len(classCounts) == 0 {
-		return ""
-	}
-
-	majorityClass := ""
+	var majorityClass string
 	maxCount := 0
-
 	for class, count := range classCounts {
 		if count > maxCount {
 			maxCount = count

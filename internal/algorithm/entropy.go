@@ -2,8 +2,14 @@ package algorithm
 
 import (
 	"math"
+	"sync"
 
 	"CodeLens-decision-tree/internal/model"
+)
+
+var (
+	log2Cache      = make(map[float64]float64)
+	log2CacheMutex sync.RWMutex
 )
 
 // CalculateEntropy computes the entropy of a dataset based on a given target attribute.
@@ -20,7 +26,6 @@ import (
 //
 // Returns:
 // - A float64 value representing the entropy of the dataset
-
 func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
 	if len(dataset.RowInstances) == 0 {
 		return 0.0
@@ -73,7 +78,6 @@ func getLog2(value float64) float64 {
 	log2CacheMutex.RUnlock()
 
 	// Calculate and cache if common value
-
 	result := math.Log2(value)
 
 	// Only cache common values to prevent memory bloat
@@ -93,9 +97,9 @@ func getLog2(value float64) float64 {
 // GainRatio(S, A) = IG(S, A) / SplitInfo(S, A)
 //
 // where:
-// - IG(S, A) is the information gain of splitting on attribute A,
-// - SplitInfo(S, A) = - ∑ (|S_v| / |S|) * log₂(|S_v| / |S|)
-//   is the entropy of the distribution of instances across subsets.
+//   - IG(S, A) is the information gain of splitting on attribute A,
+//   - SplitInfo(S, A) = - ∑ (|S_v| / |S|) * log₂(|S_v| / |S|)
+//     is the entropy of the distribution of instances across subsets.
 //
 // Parameters:
 // - dataset: A pointer to the dataset containing instances.
@@ -104,7 +108,6 @@ func getLog2(value float64) float64 {
 //
 // Returns:
 // - A float64 value representing the gain ratio.
-
 func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64 {
 	originalEntropy := CalculateEntropy(dataset, targetAttr)
 	if originalEntropy == 0 {
@@ -156,9 +159,9 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 // GainRatio(S, A) = IG(S, A) / SplitInfo(S, A)
 //
 // where:
-// - IG(S, A) is the information gain of splitting on attribute A,
-// - SplitInfo(S, A) = - ∑ (|S_v| / |S|) * log₂(|S_v| / |S|)
-//   is the entropy of the distribution of instances across subsets.
+//   - IG(S, A) is the information gain of splitting on attribute A,
+//   - SplitInfo(S, A) = - ∑ (|S_v| / |S|) * log₂(|S_v| / |S|)
+//     is the entropy of the distribution of instances across subsets.
 //
 // Parameters:
 // - dataset: A pointer to the dataset containing instances.
@@ -167,7 +170,6 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 //
 // Returns:
 // - A float64 value representing the gain ratio.
-
 func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAttr string) float64 {
 	informationGain := CalculateInformationGain(dataset, attr, targetAttr)
 	if informationGain == 0 {
