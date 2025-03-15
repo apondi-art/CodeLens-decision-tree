@@ -39,7 +39,6 @@ func DeserializeTree(path string) (*model.DecisionTree, error) {
 	// Convert the custom node to a model.Node
 	rootNode := convertToModelNode(&customNode)
 
-	// Create tree with converted root node
 	tree := &model.DecisionTree{
 		Root:       rootNode,
 		TargetAttr: customNode.Attribute, // Set the target attribute
