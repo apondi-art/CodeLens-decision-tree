@@ -53,7 +53,7 @@ type Attribute struct {
 	// Additional fields as needed
 }
 
-// CalculateGainRatio calculates the gain ratio for an attribute
+// / CalculateGainRatio calculates the gain ratio for an attribute
 func (a *Attribute) CalculateGainRatio(dataset *Dataset) float64 {
 	if dataset.TotalRows == 0 {
 		return 0
@@ -73,7 +73,7 @@ func (a *Attribute) CalculateGainRatio(dataset *Dataset) float64 {
 		// For numeric attributes, find the best split point
 		threshold, _ := a.findBestNumericSplit(dataset)
 		if threshold != nil {
-			subsets, err = dataset.SplitByNumericThreshold(a.Name, *threshold) // Dereference threshold
+			subsets, err = dataset.SplitByNumericThreshold(a.Name, *threshold)
 		}
 	} else {
 		// For categorical attributes, split by each value
@@ -84,20 +84,34 @@ func (a *Attribute) CalculateGainRatio(dataset *Dataset) float64 {
 		return 0
 	}
 
-	// Calculate weighted entropy after the split
-	weightedEntropy := 0.0
-	splitInfo := 0.0
+	// Prepare slices for gonum operations
+	weights := make([]float64, 0, len(subsets))
+	entropies := make([]float64, 0, len(subsets))
 
+	totalRows := float64(dataset.TotalRows)
+
+	// Calculate weights and entropies for each subset
 	for _, subset := range subsets {
 		if subset.TotalRows == 0 {
 			continue
 		}
+		weight := float64(subset.TotalRows) / totalRows
+		weights = append(weights, weight)
+		entropies = append(entropies, subset.CalculateClassEntropy())
+	}
 
-		weight := float64(subset.TotalRows) / float64(dataset.TotalRows)
-		weightedEntropy += weight * subset.CalculateClassEntropy()
+	// Calculate weighted entropy
+	weightedEntropy := 0.0
+	for i := range weights {
+		weightedEntropy += weights[i] * entropies[i]
+	}
 
-		// Calculate split information for gain ratio
-		splitInfo -= weight * math.Log2(weight)
+	// Calculate split information for gain ratio
+	splitInfo := 0.0
+	for _, weight := range weights {
+		if weight > 0 {
+			splitInfo -= weight * math.Log2(weight)
+		}
 	}
 
 	// Calculate information gain
@@ -110,7 +124,6 @@ func (a *Attribute) CalculateGainRatio(dataset *Dataset) float64 {
 
 	// Calculate gain ratio
 	gainRatio := infoGain / splitInfo
-
 	return gainRatio
 }
 
@@ -119,6 +132,11 @@ func (a *Attribute) FindBestSplit(dataset *Dataset) (Split, float64) {
 	split := Split{
 		Attribute: a,
 		GainRatio: 0,
+	}
+
+	// Early return for empty datasets
+	if dataset == nil || len(dataset.RowInstances) == 0 {
+		return split, 0
 	}
 
 	gainRatio := a.CalculateGainRatio(dataset)
@@ -138,6 +156,9 @@ func (a *Attribute) FindBestSplit(dataset *Dataset) (Split, float64) {
 
 		// Get all unique values for the attribute
 		uniqueValues := dataset.GetUniqueValues(a.Name)
+
+		// Use pre-allocation for better performance
+		split.CategoricalMap = make(map[string]bool, len(uniqueValues))
 		for _, val := range uniqueValues {
 			if strVal, ok := val.(string); ok {
 				split.CategoricalMap[strVal] = true
@@ -164,8 +185,11 @@ func (a *Attribute) findBestNumericSplit(dataset *Dataset) (*float64, error) {
 	// Sort the values
 	sort.Float64s(values)
 
+	// Pre-allocate with reasonable capacity
+	estimatedSplitPoints := len(values) / 2
+	splitPoints := make([]float64, 0, estimatedSplitPoints)
+
 	// Find potential split points (midpoints between adjacent distinct values)
-	var splitPoints []float64
 	for i := 0; i < len(values)-1; i++ {
 		if values[i] != values[i+1] {
 			splitPoints = append(splitPoints, (values[i]+values[i+1])/2)
@@ -176,9 +200,23 @@ func (a *Attribute) findBestNumericSplit(dataset *Dataset) (*float64, error) {
 		return nil, fmt.Errorf("no valid split points for attribute '%s'", a.Name)
 	}
 
+	// For large datasets with many split points, sample them
+	if len(splitPoints) > 100 {
+		// Take every nth point
+		n := len(splitPoints) / 100
+		sampledPoints := make([]float64, 0, 100)
+		for i := 0; i < len(splitPoints); i += n {
+			sampledPoints = append(sampledPoints, splitPoints[i])
+		}
+		splitPoints = sampledPoints
+	}
+
 	// Evaluate each split point
 	bestGainRatio := -1.0
 	var bestThreshold *float64
+
+	// Cache the class entropy calculation
+	classEntropy := dataset.CalculateClassEntropy()
 
 	for _, threshold := range splitPoints {
 		// Split the dataset
@@ -186,10 +224,6 @@ func (a *Attribute) findBestNumericSplit(dataset *Dataset) (*float64, error) {
 		if err != nil || len(subsets) <= 1 {
 			continue
 		}
-
-		// Calculate class entropy before split
-		classEntropy := dataset.CalculateClassEntropy()
-
 		// Calculate weighted entropy after split
 		weightedEntropy := 0.0
 		splitInfo := 0.0
