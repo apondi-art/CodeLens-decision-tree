@@ -32,7 +32,6 @@ func ParseCategorical(value string) (string, error) {
 
 // ParseTimestamp parses a string into a time.Time object using common date-time formats.
 // Returns an error if the input format is invalid.
-
 func ParseTimestamp(value string) (time.Time, error) {
 	formats := []string{
 		"2006-01-02",                // YYYY-MM-DD
