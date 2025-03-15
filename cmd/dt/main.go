@@ -7,6 +7,7 @@ import (
 	"CodeLens-decision-tree/internal/flags"
 )
 
+// This is the entry point of the program
 func main() {
 	// Parse CLI flags.
 	cmdFlags, err := flags.ParseFlags()
@@ -24,7 +25,6 @@ func main() {
 		log.Fatalf("Invalid command: %s", cmdFlags.Command)
 	}
 
-	// Handle errors.
 	if err != nil {
 		log.Fatalf("Error executing command: %v", err)
 	}
