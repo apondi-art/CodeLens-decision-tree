@@ -1,7 +1,27 @@
 # C4.5 Decision Tree Implementation
 
-## Overview
-This project is a scalable, high-performance implementation of the C4.5 decision tree algorithm in Go. It provides a complete toolkit for building, training, pruning, and using decision trees for classification tasks, with special focus on handling large datasets efficiently through parallelization and memory optimization techniques.
+## Introduction
+Jam is a fast and scalable C4.5 Decision Tree classifier implemented in Go. It provides a complete toolkit for building, training, pruning, and using decision trees for classification tasks. Designed for high performance, it efficiently handles large datasets using parallelization and memory optimization techniques, making it ideal for real-world machine learning applications.
+
+
+Decision trees are a fundamental machine-learning technique used in spam detection, fraud analysis, medical diagnosis, and recommendation systems. This project allows users to:
+
+ Train a decision tree model on large datasets quickly.
+    Make predictions on new data with high accuracy.
+    Handle both categorical and numerical features efficiently.
+    Store trained models in JSON format for easy portability.
+
+
+### Features
+- Complete C4.5 Decision Tree Implementation – Fully implements the C4.5 algorithm for classification tasks.
+- Supports Categorical & Numerical Attributes – Handles both types of features seamlessly.
+- Efficient Missing Value Handling – Automatically manages incomplete data.
+- Post-Pruning to Prevent Overfitting – Improves model generalization.
+- Parallelized Tree Construction – Speeds up training using concurrency.
+- Memory-Efficient Data Structures – Optimized for large datasets with minimal memory usage.
+- Easy-to-Use CLI – Simple command-line interface for training and predictions.
+- JSON-Based Model Storage – Supports model serialization and deserialization.
+- Comprehensive Evaluation Metrics – Provides accuracy, precision, recall, and F1-score for model assessment.
 
 ## Table of Contents
 - [Features](#features)
@@ -17,97 +37,41 @@ This project is a scalable, high-performance implementation of the C4.5 decision
 - [Contributing Guidelines](#contributing-guidelines)
 - [License](#license)
 
-## Features
-- Full implementation of the C4.5 decision tree algorithm
-- Support for both categorical and numerical attributes
-- Efficient handling of missing values
-- Post-pruning capabilities to prevent overfitting
-- Parallelized tree building for improved performance
-- Memory-efficient data structures for large datasets
-- Command-line interface for training and prediction
-- Model serialization and deserialization (JSON format)
-- Comprehensive evaluation metrics
 
-## Project Structure
-```
-decision-tree/
-├── cmd/
-│   └── dt/
-│       ├── main.go                 # CLI entry point
-│       └── main_test.go            # Test file for CLI commands
-├── internal/
-│   ├── data/
-│   │   ├── loader.go               # Data loading and preprocessing
-│   │   ├── parser.go               # CSV parsing logic
-│   │   ├── validator.go            # Input validation
-│   │   └── data_test.go            # Test file for data handling
-│   ├── model/
-│   │   ├── attribute.go            # Attribute representation
-│   │   ├── dataset.go              # Dataset structure
-│   │   ├── node.go                 # Decision tree node
-│   │   ├── tree.go                 # Decision tree model
-│   │   └── model_test.go            # Test file for model components
-│   ├── algorithm/
-│   │   ├── entropy.go              # Entropy and information gain calculations
-│   │   ├── splitter.go             # Data splitting logic
-│   │   ├── c45.go                  # Core C4.5 implementation
-│   │   ├── pruner.go               # Tree pruning
-│   │   └── algorithm_test.go        # Test file for algorithms
-│   ├── serialization/
-│   │   ├── json_serializer.go      # Model serialization to JSON
-│   │   ├── deserializer.go         # Model loading from JSON
-│   │   └── serialization_test.go     # Test file for serialization
-│   └── parallel/
-│       ├── worker_pool.go          # Parallelization utilities
-│       └── parallel_test.go         # Test file for parallelization
-├── pkg/
-│   └── metrics/
-│       ├── evaluation.go           # Performance metrics calculation
-│       └── metrics_test.go          # Test file for metrics
-└── README.md                       # Documentation
-└── LICENSE                         # License file
-```
-
-## Installation
+## Installation and SetUp
 
 ### Prerequisites
 - Go 1.18 or later
 - Git
 
 ### Step-by-Step Installation
-```bash
+
 # Clone the repository
-https://learn.zone01kisumu.ke/git/quochieng/CodeLens-decision-tree
+```bash
+git clone https://learn.zone01kisumu.ke/git/quochieng/CodeLens-decision-tree
+```
 
 # Navigate to the project directory
-CodeLens-decision-tree
+```bash
+cd CodeLens-decision-tree
+```
 
 # Build the CLI tool
-go build -o bin/dt ./cmd/dt
+```go
+go build -o cmd/dt ./cmd/dt
 ```
 
-## Usage
-
-### Training a Model
+## Usage Instructions
+. Training a Model
 ```bash
-# Train a model using a CSV file
-./bin/dt train --input data.csv --target class --output model.json
+./dt -c train -i datasets/train.csv -t class -o model.dt
 ```
 
-### Making Predictions
+. Making Predictions
 ```bash
-# Use a trained model to make predictions
-./bin/dt predict --input test.csv --model model.json --output predictions.csv
+./ dt -c predict -i datasets/test.csv -m model.dt -o predictions.csv
 ```
 
-### Advanced Options
-```bash
-# Train with pruning enabled and parallel processing
-./bin/dt train --input data.csv --target class --output model.json --prune --validate validation.csv --workers 4
-
-# Train with custom parameters
-./bin/dt train --input data.csv --target class --output model.json --max-depth 10 --min-samples 5
-```
 
 ## Algorithm Details
 
@@ -166,6 +130,8 @@ func PruneTree(root *model.Node, validationSet *model.Dataset, targetAttr string
 func EstimateError(node *model.Node, dataset *model.Dataset, targetAttr string) float64
 ```
 
+## Error Handling
+
 ## Performance Optimizations
 
 ### Memory Efficiency
@@ -187,19 +153,6 @@ func EstimateError(node *model.Node, dataset *model.Dataset, targetAttr string) 
 - Sampling techniques for initial attribute evaluation
 - Support for distributed processing (optional advanced feature)
 
-## API Reference
-
-### Data Handling
-```go
-// Load data from CSV file
-func LoadCSV(path string) (*model.Dataset, error)
-
-// Infer data types from CSV content
-func InferDataTypes(data [][]string) (map[string]string, error)
-
-// Handle missing values in the dataset
-func HandleMissingValues(dataset *model.Dataset) error
-```
 
 ### Core Model Components
 ```go
@@ -249,6 +202,8 @@ func SerializeTree(tree *model.DecisionTree, path string) error
 // Load model from file
 func DeserializeTree(path string) (*model.DecisionTree, error)
 ```
+
+## Testing
 
 ## Contributors
 
