@@ -17,7 +17,7 @@ func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr
 
 	// Base case: If the dataset is pure or no attributes are left, return a leaf node.
 	if dataset.IsPure() || len(attributes) == 0 || depth >= maxDepth {
-		majorityClass := dataset.GetMajorityClass()
+		majorityClass := GetMajorityClass(dataset)
 		return &model.Node{
 			IsLeaf:            true,
 			PredictedClass:    majorityClass,
