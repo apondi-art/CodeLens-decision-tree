@@ -3,78 +3,76 @@ package serialization
 import (
 	"os"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDeserializeTree(t *testing.T) {
 	// Create a temporary JSON file for testing
 	tempFile, err := os.CreateTemp("", "test_tree_*.json")
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Error creating temporary file: %v", err)
+	}
 	defer os.Remove(tempFile.Name())
 
 	// Write sample JSON data to the file
 	jsonData := `{
 		"Root": {
-			"Attribute": "Color",
+			"SplitAttr": "Color",
+			"SplitValue": null,
 			"IsLeaf": false,
+			"ClassDistribution": {
+				"Yes": 60,
+				"No": 40
+			},
 			"Children": {
-				"Red": {
-					"Attribute": "Size",
+				"0": {
+					"SplitAttr": "Size",
 					"IsLeaf": true,
-					"PredictedClass": "Apple"
+					"PredictedClass": "Apple",
+					"ClassDistribution": null,
+					"SplitValue": null,
+					"Children": null
 				}
 			}
-		}
+		},
+      "TargetAttr": "Target"
 	}`
 	_, err = tempFile.WriteString(jsonData)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Error writing JSON data to file: %v", err)
+	}
 	tempFile.Close()
 
 	// Call DeserializeTree
 	tree, err := DeserializeTree(tempFile.Name())
-	assert.NoError(t, err)
-	assert.NotNil(t, tree)
-
-	// Validate the tree structure
-	assert.Equal(t, "Color", tree.Root.Attribute.Name)
-	assert.False(t, tree.Root.IsLeaf)
-	assert.Contains(t, tree.Root.Children, "Red")
-
-	redNode := tree.Root.Children["Red"]
-	assert.Equal(t, "Size", redNode.Attribute.Name)
-	assert.True(t, redNode.IsLeaf)
-	assert.Equal(t, "Apple", redNode.PredictedClass)
-}
-
-func TestJSONToNode(t *testing.T) {
-	// Sample JSON data for a node
-	jsonData := map[string]interface{}{
-		"Attribute": "Color",
-		"IsLeaf":    false,
-		"Children": map[string]interface{}{
-			"Red": map[string]interface{}{
-				"Attribute":      "Size",
-				"IsLeaf":         true,
-				"PredictedClass": "Apple",
-			},
-		},
+	if err != nil {
+		t.Fatalf("Error deserializing tree: %v", err)
+	}
+	if tree == nil {
+		t.Fatalf("Deserialized tree is nil")
 	}
 
-	// Call JSONToNode
-	node, err := JSONToNode(jsonData)
-	assert.NoError(t, err)
-	assert.NotNil(t, node)
+	// Validate the tree structure
+	if tree.Root.SplitAttr != "Color" {
+		t.Errorf("Expected SplitAttr to be Color, but got %s", tree.Root.SplitAttr)
+	}
+	if tree.Root.IsLeaf {
+		t.Errorf("Expected IsLeaf to be false, but got true")
+	}
+	if tree.TargetAttr != "Target" {
+		t.Errorf("Expected TargetAttr to be Target, but got %s", tree.TargetAttr)
+	}
+	if _, ok := tree.Root.Children["0"]; !ok {
+		t.Errorf("Expected Children to contain key 0")
+	}
 
-	// Validate the node
-	assert.Equal(t, "Color", node.Attribute.Name)
-	assert.False(t, node.IsLeaf)
-
-	// Validate child nodes
-	assert.Contains(t, node.Children, "Red")
-
-	redNode := node.Children["Red"]
-	assert.Equal(t, "Size", redNode.Attribute.Name)
-	assert.True(t, redNode.IsLeaf)
-	assert.Equal(t, "Apple", redNode.PredictedClass)
+	redNode := tree.Root.Children["0"]
+	if redNode.SplitAttr != "Size" {
+		t.Errorf("Expected SplitAttr to be Size, but got %s", redNode.SplitAttr)
+	}
+	if redNode.IsLeaf != true {
+		t.Errorf("Expected IsLeaf to be true, but got false")
+	}
+	if redNode.PredictedClass != "Apple" {
+		t.Errorf("Expected PredictedClass to be Apple, but got %s", redNode.PredictedClass)
+	}
 }
