@@ -179,7 +179,13 @@ func (d *Dataset) IsPure() bool {
 
 // GetMajorityClass returns the most frequent class in the dataset
 func (d *Dataset) GetMajorityClass() string {
-	classCounts := d.CountClassInstances()
+	// Use cached target occurrence if available
+	var classCounts map[string]int
+	if d.TargetOccurrence != nil {
+		classCounts = d.TargetOccurrence
+	} else {
+		classCounts = d.CountClassInstances()
+	}
 
 	if len(classCounts) == 0 {
 		return ""
