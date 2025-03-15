@@ -26,27 +26,64 @@ func CalculateEntropy(dataset *model.Dataset, targetAttr string) float64 {
 		return 0.0
 	}
 
-	classCounts := make(map[string]int)
-	totalInstances := 0
+	// Use cached values if target column matches
+	var classCounts map[string]int
+	if dataset.TargetColumn == targetAttr && dataset.TargetOccurrence != nil {
+		classCounts = dataset.TargetOccurrence
+	} else {
+		classCounts = make(map[string]int)
+		for _, instance := range dataset.RowInstances {
+			if classValue, ok := instance[targetAttr].(string); ok && classValue != "" {
+				classCounts[classValue]++
+			}
+		}
 
-	for _, instance := range dataset.RowInstances {
-		if classValue, ok := instance[targetAttr].(string); ok && classValue != "" {
-			classCounts[classValue]++
-			totalInstances++
+		// Cache results for reuse
+		if dataset.TargetColumn == targetAttr {
+			dataset.TargetOccurrence = classCounts
 		}
 	}
 
-	if totalInstances == 0 {
-		return 0.0 // Handle case where all values are missing
+	totalInstances := len(dataset.RowInstances)
+
+	// Quick return for pure datasets
+	if len(classCounts) <= 1 {
+		return 0.0
 	}
 
 	var entropy float64
 	for _, count := range classCounts {
-		probability := float64(count) / float64(totalInstances)
-		entropy -= probability * math.Log2(probability)
+		if count > 0 {
+			probability := float64(count) / float64(totalInstances)
+			entropy -= probability * getLog2(probability)
+		}
 	}
 
 	return entropy
+}
+
+// getLog2 retrieves or calculates log2 value with caching
+func getLog2(value float64) float64 {
+	// Check cache first with read lock
+	log2CacheMutex.RLock()
+	if cached, exists := log2Cache[value]; exists {
+		log2CacheMutex.RUnlock()
+		return cached
+	}
+	log2CacheMutex.RUnlock()
+
+	// Calculate and cache if common value
+
+	result := math.Log2(value)
+
+	// Only cache common values to prevent memory bloat
+	if value > 0.01 && value < 1.0 {
+		log2CacheMutex.Lock()
+		log2Cache[value] = result
+		log2CacheMutex.Unlock()
+	}
+
+	return result
 }
 
 // CalculateGainRatio computes the gain ratio of splitting a dataset on a given attribute.
@@ -139,7 +176,9 @@ func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAtt
 
 	splitInfo := 0.0
 	totalInstances := float64(len(dataset.RowInstances))
-	subsets := make(map[interface{}]int)
+
+	// Pre-allocate with reasonable capacity
+	subsets := make(map[interface{}]int, 10)
 
 	for _, instance := range dataset.RowInstances {
 		attrValue := instance[attr.Name]
@@ -152,7 +191,7 @@ func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAtt
 	for _, count := range subsets {
 		probability := float64(count) / totalInstances
 		if probability > 0 {
-			splitInfo -= probability * math.Log2(probability)
+			splitInfo -= probability * getLog2(probability)
 		}
 	}
 
@@ -160,5 +199,5 @@ func CalculateGainRatio(dataset *model.Dataset, attr *model.Attribute, targetAtt
 		return 0.0
 	}
 
-	return math.Round((informationGain/splitInfo)*1e6) / 1e6
+	return informationGain / splitInfo
 }
