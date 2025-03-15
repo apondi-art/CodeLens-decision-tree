@@ -40,39 +40,110 @@ func (d *Dataset) CountClassInstances() map[string]int {
 			}
 		}
 	}
-	
+
 	// Cache the result for future use
 	if d.TargetColumn != "" {
 		d.TargetOccurrence = classCounts
 	}
-	
+
 	return classCounts
 }
 
 // GetUniqueValues returns all unique values for a given attribute
 func (d *Dataset) GetUniqueValues(attr string) []interface{} {
-	uniqueValues := make(map[interface{}]bool)
+	// For small datasets, just use the standard approach
+	if len(d.RowInstances) < 1000 {
+		uniqueValues := make(map[interface{}]bool)
 
-	// Iterate through all instances and collect unique values.
-	for _, instance := range d.RowInstances {
-		if value, exists := instance[attr]; exists {
-			uniqueValues[value] = true
+		// Iterate through all instances and collect unique values
+		for _, instance := range d.RowInstances {
+			if value, exists := instance[attr]; exists && value != nil {
+				uniqueValues[value] = true
+			}
+		}
+
+		// Convert the map keys to a slice with pre-allocation
+		result := make([]interface{}, 0, len(uniqueValues))
+		for value := range uniqueValues {
+			result = append(result, value)
+		}
+
+		return result
+	}
+
+	// For large datasets, use concurrent processing
+	const chunkSize = 500
+	numWorkers := (len(d.RowInstances) + chunkSize - 1) / chunkSize
+
+	// Create chunks of work
+	var wg sync.WaitGroup
+	resultChan := make(chan map[interface{}]bool, numWorkers)
+
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func(startIdx, endIdx int) {
+			defer wg.Done()
+			localUnique := make(map[interface{}]bool)
+
+			// Process chunk
+			for j := startIdx; j < endIdx && j < len(d.RowInstances); j++ {
+				if value, exists := d.RowInstances[j][attr]; exists && value != nil {
+					localUnique[value] = true
+				}
+			}
+
+			resultChan <- localUnique
+		}(i*chunkSize, (i+1)*chunkSize)
+	}
+
+	// Close channel when all workers complete
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// Merge results
+	mergedUnique := make(map[interface{}]bool)
+	for localUnique := range resultChan {
+		for value := range localUnique {
+			mergedUnique[value] = true
 		}
 	}
 
-	// Convert the map keys to a slice.
-	result := make([]interface{}, 0, len(uniqueValues))
-	for value := range uniqueValues {
+	// Convert to slice
+	result := make([]interface{}, 0, len(mergedUnique))
+	for value := range mergedUnique {
 		result = append(result, value)
 	}
 
 	return result
 }
 
-// GetNumericValues returns all values for a numeric attribute as floats
+// GetNumericValues extracts all the numeric values for a specified attribute.
+// It returns a slice of float64 values for the attribute, or an error if the attribute isn't found or the data isn't numeric.
 func (d *Dataset) GetNumericValues(attr string) ([]float64, error) {
-	// to populate
-	return []float64{}, nil
+	// Create a slice to store numeric values
+	var numericValues []float64
+
+	// Iterate over each instance in the dataset
+	for _, instance := range d.RowInstances {
+		// Check if the attribute exists in the instance
+		attrValue, exists := instance[attr]
+		if !exists {
+			return nil, fmt.Errorf("attribute '%s' not found in the dataset", attr)
+		}
+
+		// Ensure the attribute is of type float64 (numeric)
+		if numVal, ok := attrValue.(float64); ok {
+			numericValues = append(numericValues, numVal)
+		} else {
+			// If the value isn't numeric, we skip this instance
+			continue
+		}
+	}
+
+	// Return the extracted numeric values
+	return numericValues, nil
 }
 
 // CalculateClassEntropy calculates the entropy of the target attribute
