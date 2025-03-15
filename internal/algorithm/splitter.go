@@ -18,16 +18,20 @@ import (
 // Returns:
 // - A new dataset containing only records matching the given attribute value.
 // - An error if dataset or attribute is nil.
-func SplitDataset(dataset *model.Dataset, split *model.Split) (*model.Dataset, error) {
 
+func SplitDataset(dataset *model.Dataset, split *model.Split) (*model.Dataset, error) {
+	// Check for nil input values
 	if dataset == nil || split == nil || split.Attribute == nil {
 		return nil, errors.New("dataset, split, or attribute is nil")
 	}
 
+	// Initialize the subset to hold the matching rows
 	var subset []map[string]interface{}
-	attr := split.Attribute // The attribute we are splitting on
+	attr := split.Attribute // The attribute we're splitting on
 
+	// Loop over each instance in the dataset
 	for _, instance := range dataset.RowInstances {
+		// Get the value of the current attribute for the row
 		attrValue := instance[attr.Name]
 
 		// Skip instances with nil or missing values for the specified attribute
@@ -35,9 +39,10 @@ func SplitDataset(dataset *model.Dataset, split *model.Split) (*model.Dataset, e
 			continue
 		}
 
+		// Check the attribute type and apply the appropriate filter
 		switch attr.Type {
 		case model.Categorical:
-			// Ensure the value is a string before checking in CategoricalMap
+			// Ensure the value is a string before checking in the CategoricalMap
 			if strVal, ok := attrValue.(string); ok {
 				// Check if the categorical value is in the CategoricalMap
 				if _, found := split.CategoricalMap[strVal]; found {
@@ -55,11 +60,15 @@ func SplitDataset(dataset *model.Dataset, split *model.Split) (*model.Dataset, e
 				}
 			}
 		}
-
 	}
 
-	return &model.Dataset{RowInstances: subset, ColumnAttributes: dataset.ColumnAttributes}, nil
+	// Return the new dataset with the filtered subset of rows
+	return &model.Dataset{
+		RowInstances:   subset,
+		ColumnAttributes: dataset.ColumnAttributes,
+	}, nil
 }
+
 
 // FindBestNumericalSplit identifies the optimal threshold for splitting a numerical attribute.
 // It evaluates potential thresholds using information gain and selects the best one.
