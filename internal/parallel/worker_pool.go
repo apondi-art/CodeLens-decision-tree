@@ -1,24 +1,22 @@
 package parallel
 
-//import "CodeLens-decision-tree/internal/model"
-
 import "sync"
 
 type (
 	Task func() interface{}
 
 	WorkerPool struct {
-		numWorkers int
-		jobQueue   chan Task
+		numWorkers  int
+		jobQueue    chan Task
 		resultQueue chan interface{}
-		wg         sync.WaitGroup
+		wg          sync.WaitGroup
 	}
 )
 
 func NewWorkerPool(numWorkers int) *WorkerPool {
 	wp := &WorkerPool{
 		numWorkers:  numWorkers,
-		jobQueue:    make(chan Task, 100), // Buffered channel
+		jobQueue:    make(chan Task, 100),        // Buffered channel
 		resultQueue: make(chan interface{}, 100), // Buffered channel
 		wg:          sync.WaitGroup{},
 	}
@@ -80,9 +78,9 @@ func (wp *WorkerPool) worker(workerID int) {
 	}
 }
 
-//func NewWorkerPool(numWorkers int) *WorkerPool
-//func (wp *WorkerPool) Submit(task Task) interface{}
-//func (wp *WorkerPool) ProcessInParallel(tasks []Task) []interface{}
+// func NewWorkerPool(numWorkers int) *WorkerPool
+// func (wp *WorkerPool) Submit(task Task) interface{}
+// func (wp *WorkerPool) ProcessInParallel(tasks []Task) []interface{}
 
 // Parallel tree building
-//func BuildTreeParallel(dataset *model.Dataset, attributes []*Attribute, targetAttr string, depth, maxDepth int, workerPool *WorkerPool) (*model.Node, error)
+// func BuildTreeParallel(dataset *model.Dataset, attributes []*Attribute, targetAttr string, depth, maxDepth int, workerPool *WorkerPool) (*model.Node, error)
