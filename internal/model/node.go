@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-// Node represents a node in the decision tree
-
 // Node represents a single node in the decision tree.
 type Node struct {
 	Attribute      *Attribute            // The attribute used for splitting at this node

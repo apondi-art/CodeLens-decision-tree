@@ -204,8 +204,6 @@ func (d *Dataset) GetMajorityClass() string {
 	return majorityClass
 }
 
-// func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[string]*Dataset, error)
-
 // SplitByNumericThreshold splits the dataset based on a numerical threshold.
 func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[interface{}]*Dataset, error) {
 	// Pre-allocate with expected size
