@@ -17,7 +17,6 @@ type Flags struct {
 	TrainedFile  string // Only for prediction
 }
 
-
 // ParseFlags initializes and validates CLI flags
 func ParseFlags() (Flags, error) {
 	var cmdFlags Flags
