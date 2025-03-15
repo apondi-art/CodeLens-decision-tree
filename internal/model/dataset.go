@@ -253,6 +253,10 @@ func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[i
 		}
 	}
 
+	// Set total rows for each subset
+	lessThanOrEqual.TotalRows = len(lessThanOrEqual.RowInstances)
+	greaterThan.TotalRows = len(greaterThan.RowInstances)
+
 	subsets["<="] = lessThanOrEqual
 	subsets[">"] = greaterThan
 
@@ -261,26 +265,107 @@ func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[i
 
 // SplitByCategoricalValue splits the dataset based on the unique values of a categorical attribute.
 func (d *Dataset) SplitByCategoricalValue(attr string) (map[interface{}]*Dataset, error) {
-	subsets := make(map[interface{}]*Dataset)
-
-	// Get all unique values for the attribute.
+	// Get unique values first to determine how many subsets we'll need
 	uniqueValues := d.GetUniqueValues(attr)
+	if len(uniqueValues) == 0 {
+		return nil, fmt.Errorf("no unique values found for attribute: %s", attr)
+	}
 
-	// Create a subset for each unique value.
-	for _, value := range uniqueValues {
-		subset := &Dataset{
-			RowInstances: []map[string]interface{}{},
-			TargetColumn: d.TargetColumn,
-		}
+	// For smaller datasets or few unique values, use the direct approach
+	if len(d.RowInstances) < 1000 || len(uniqueValues) < 5 {
+		// Pre-allocate the map with the correct capacity
+		subsets := make(map[interface{}]*Dataset, len(uniqueValues))
 
-		// Add instances with the current value to the subset.
+		// Count instances per value to pre-allocate arrays
+		valueCounts := make(map[interface{}]int, len(uniqueValues))
 		for _, instance := range d.RowInstances {
-			if instance[attr] == value {
-				subset.RowInstances = append(subset.RowInstances, instance)
+			if value, exists := instance[attr]; exists && value != nil {
+				valueCounts[value]++
 			}
 		}
 
-		subsets[value] = subset
+		// Create a subset for each unique value with appropriate capacity
+		for _, value := range uniqueValues {
+			count := valueCounts[value]
+			subset := &Dataset{
+				RowInstances:     make([]map[string]interface{}, 0, count),
+				TargetColumn:     d.TargetColumn,
+				ColumnAttributes: d.ColumnAttributes,
+				ColumnNames:      d.ColumnNames,
+				NonTargetColumns: d.NonTargetColumns,
+			}
+
+			// Add instances with matching value
+			for _, instance := range d.RowInstances {
+				if instance[attr] == value {
+					subset.RowInstances = append(subset.RowInstances, instance)
+				}
+			}
+
+			subset.TotalRows = len(subset.RowInstances)
+			subsets[value] = subset
+		}
+
+		return subsets, nil
+	}
+
+	// For larger datasets with many values, use concurrent approach
+	subsets := make(map[interface{}]*Dataset, len(uniqueValues))
+	var mutex sync.Mutex
+
+	// Create empty datasets for each value
+	for _, value := range uniqueValues {
+		subsets[value] = &Dataset{
+			RowInstances:     make([]map[string]interface{}, 0),
+			TargetColumn:     d.TargetColumn,
+			ColumnAttributes: d.ColumnAttributes,
+			ColumnNames:      d.ColumnNames,
+			NonTargetColumns: d.NonTargetColumns,
+		}
+	}
+
+	// Process in parallel chunks
+	const chunkSize = 500
+	numWorkers := (len(d.RowInstances) + chunkSize - 1) / chunkSize
+	var wg sync.WaitGroup
+
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func(startIdx, endIdx int) {
+			defer wg.Done()
+
+			// Local maps to reduce lock contention
+			localSubsets := make(map[interface{}][]map[string]interface{}, len(uniqueValues))
+			for _, value := range uniqueValues {
+				localSubsets[value] = make([]map[string]interface{}, 0)
+			}
+
+			// Process chunk
+			for j := startIdx; j < endIdx && j < len(d.RowInstances); j++ {
+				instance := d.RowInstances[j]
+				if value, exists := instance[attr]; exists && value != nil {
+					if _, found := localSubsets[value]; found {
+						localSubsets[value] = append(localSubsets[value], instance)
+					}
+				}
+			}
+
+			// Merge results with lock
+			mutex.Lock()
+			defer mutex.Unlock()
+			for value, instances := range localSubsets {
+				if len(instances) > 0 {
+					subsets[value].RowInstances = append(subsets[value].RowInstances, instances...)
+				}
+			}
+		}(i*chunkSize, (i+1)*chunkSize)
+	}
+
+	wg.Wait()
+
+	// Set total rows for each subset
+	for _, subset := range subsets {
+		subset.TotalRows = len(subset.RowInstances)
 	}
 
 	return subsets, nil
