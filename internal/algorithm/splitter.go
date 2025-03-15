@@ -29,9 +29,7 @@ func SplitDataset(dataset *model.Dataset, split *model.Split) (*model.Dataset, e
 	var subset []map[string]interface{}
 	attr := split.Attribute // The attribute we're splitting on
 
-	// Loop over each instance in the dataset
 	for _, instance := range dataset.RowInstances {
-		// Get the value of the current attribute for the row
 		attrValue := instance[attr.Name]
 
 		// Skip instances with nil or missing values for the specified attribute
