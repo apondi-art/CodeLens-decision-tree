@@ -165,7 +165,7 @@ func TestSelectBestAttribute(t *testing.T) {
 			},
 			target:       "PlayTennis",
 			expectedAttr: "Outlook",
-			expectedGain: 0.666667, // Precomputed gain ratio for Outlook
+			expectedGain: 0.6666666666666666, // Precomputed gain ratio for Outlook
 		},
 		{
 			name: "No attributes left",
@@ -185,7 +185,7 @@ func TestSelectBestAttribute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			attr, gain := SelectBestAttribute(tt.dataset, tt.attributes, tt.target)
+			attr, gain := SelectBestAttribute(&tt.dataset, tt.attributes, tt.target)
 			if attr != nil && attr.Name != tt.expectedAttr {
 				t.Errorf("SelectBestAttribute() attribute = %v, expected %v", attr.Name, tt.expectedAttr)
 			}
