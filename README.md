@@ -59,17 +59,19 @@ cd CodeLens-decision-tree
 ```go
 chmod +x build.sh
 ```
-
-
+### Create a binary
+```go
+./build.sh
+```
 ### Usage
 - Training a Model
 ```bash
-.bin/dt -c train -i datasets/train.csv -t class -o model.dt
+./bin/dt -c train -i cmd/dt/test.csv -t <TargetAtribut> -o model.dt
 ```
 
 - Making Predictions
 ```bash
-.bin/dt -c predict -i datasets/test.csv -m model.dt -o predictions.csv
+./bin/dt -c predict -i cmd/dt/test.csv -m model.dt -o predictions.csv
 ```
 
 
