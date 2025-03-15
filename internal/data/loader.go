@@ -53,7 +53,7 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 		}
 	}
 	if targetIndex == -1 && targetColumn != "" {
-		return nil, fmt.Errorf("Target column '%s' not found in CSV", targetColumn)
+		return nil, fmt.Errorf("target column '%s' not found in CSV", targetColumn)
 	}
 	dataset.TargetColumn = targetColumn
 
