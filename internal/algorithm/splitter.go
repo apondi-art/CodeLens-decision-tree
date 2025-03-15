@@ -2,7 +2,6 @@ package algorithm
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 
 	"CodeLens-decision-tree/internal/model"
@@ -20,9 +19,7 @@ import (
 // - A new dataset containing only records matching the given attribute value.
 // - An error if dataset or attribute is nil.
 func SplitDataset(dataset *model.Dataset, split *model.Split) (*model.Dataset, error) {
-	// fmt.Println("Starting SplitDataset with split attribute:", &split.Attribute.Name)
-    // fmt.Println("CategoricalMap contents:", &split.CategoricalMap)
-	
+
 	if dataset == nil || split == nil || split.Attribute == nil {
 		return nil, errors.New("dataset, split, or attribute is nil")
 	}
@@ -47,22 +44,19 @@ func SplitDataset(dataset *model.Dataset, split *model.Split) (*model.Dataset, e
 					subset = append(subset, instance)
 				}
 			}
-			
 
 		case model.Numeric:
 			// Ensure the value is a float before performing comparisons
 			if numVal, ok := attrValue.(float64); ok {
 				if split.Type == "<=" && numVal <= split.Value.(float64) {
 					subset = append(subset, instance)
-					fmt.Println("subset",subset)
 				} else if split.Type == ">" && numVal > split.Value.(float64) {
 					subset = append(subset, instance)
 				}
 			}
 		}
-		
+
 	}
-	fmt.Println("subset",subset)
 
 	return &model.Dataset{RowInstances: subset, ColumnAttributes: dataset.ColumnAttributes}, nil
 }

@@ -112,7 +112,6 @@ func CalculateInformationGain(dataset *model.Dataset, attr *model.Attribute, tar
 	return math.Round((originalEntropy-weightedEntropy)*1e6) / 1e6
 }
 
-
 // CalculateGainRatio computes the gain ratio of splitting a dataset on a given attribute.
 // Gain ratio is an improvement over information gain that normalizes for the number of possible splits.
 //
