@@ -65,8 +65,11 @@ chmod +x build.sh
 ```
 ### Usage
 - Training a Model
+- you can replace PlayTennis with your new Target Atirbute which has the following fields:
+      -numeric(1 or 0)  or 
+       categorical(yes or no)
 ```bash
-./bin/dt -c train -i cmd/dt/test.csv -t <TargetAtribut> -o model.dt
+./bin/dt -c train -i cmd/dt/test.csv -t PlayTennis -o model.dt
 ```
 
 - Making Predictions
