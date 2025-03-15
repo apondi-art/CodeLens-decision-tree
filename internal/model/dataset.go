@@ -202,19 +202,44 @@ func (d *Dataset) GetMajorityClass() string {
 
 // SplitByNumericThreshold splits the dataset based on a numerical threshold.
 func (d *Dataset) SplitByNumericThreshold(attr string, threshold float64) (map[interface{}]*Dataset, error) {
-	subsets := make(map[interface{}]*Dataset)
+	// Pre-allocate with expected size
+	subsets := make(map[interface{}]*Dataset, 2)
 
-	// Create subsets for values <= threshold and values > threshold.
+	// Count instances for each subset to pre-allocate
+	leCount := 0
+	gtCount := 0
+
+	for _, instance := range d.RowInstances {
+		value, ok := instance[attr].(float64)
+		if !ok {
+			continue
+		}
+
+		if value <= threshold {
+			leCount++
+		} else {
+			gtCount++
+		}
+	}
+
+	// Create subsets with proper capacity
 	lessThanOrEqual := &Dataset{
-		RowInstances: []map[string]interface{}{},
-		TargetColumn: d.TargetColumn,
-	}
-	greaterThan := &Dataset{
-		RowInstances: []map[string]interface{}{},
-		TargetColumn: d.TargetColumn,
+		RowInstances:     make([]map[string]interface{}, 0, leCount),
+		TargetColumn:     d.TargetColumn,
+		ColumnAttributes: d.ColumnAttributes,
+		ColumnNames:      d.ColumnNames,
+		NonTargetColumns: d.NonTargetColumns,
 	}
 
-	// Add instances to the appropriate subset.
+	greaterThan := &Dataset{
+		RowInstances:     make([]map[string]interface{}, 0, gtCount),
+		TargetColumn:     d.TargetColumn,
+		ColumnAttributes: d.ColumnAttributes,
+		ColumnNames:      d.ColumnNames,
+		NonTargetColumns: d.NonTargetColumns,
+	}
+
+	// Add instances to the appropriate subset
 	for _, instance := range d.RowInstances {
 		value, ok := instance[attr].(float64)
 		if !ok {
