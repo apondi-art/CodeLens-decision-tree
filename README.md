@@ -1,9 +1,9 @@
-# C4.5 Decision Tree Implementation
+#   Fast and Scalable Decision Tree
 
 ## Introduction
 Jam is a fast and scalable C4.5 Decision Tree classifier implemented in Go. It provides a complete toolkit for building, training, pruning, and using decision trees for classification tasks. Designed for high performance, it efficiently handles large datasets using parallelization and memory optimization techniques, making it ideal for real-world machine learning applications.
 
-
+## why decision tree
 Decision trees are a fundamental machine-learning technique used in spam detection, fraud analysis, medical diagnosis, and recommendation systems. This project allows users to:
 
  Train a decision tree model on large datasets quickly.
@@ -24,14 +24,12 @@ Decision trees are a fundamental machine-learning technique used in spam detecti
 - Comprehensive Evaluation Metrics – Provides accuracy, precision, recall, and F1-score for model assessment.
 
 ## Table of Contents
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Usage](#usage)
+
+- [Installation and SetUp](#installation-and-setup)
+- [Usage Instructions](#usage)
 - [Algorithm Details](#algorithm-details)
 - [Performance Optimizations](#performance-optimizations)
-- [API Reference](#api-reference)
-- [Development](#development)
+- [Error Handling](#error-handling)
 - [Testing](#testing)
 - [Contributors](#contributors)
 - [Contributing Guidelines](#contributing-guidelines)
@@ -46,41 +44,37 @@ Decision trees are a fundamental machine-learning technique used in spam detecti
 
 ### Step-by-Step Installation
 
-# Clone the repository
+#### Clone the repository
 ```bash
 git clone https://learn.zone01kisumu.ke/git/quochieng/CodeLens-decision-tree
 ```
 
-# Navigate to the project directory
+#### Navigate to the project directory
 ```bash
 cd CodeLens-decision-tree
 ```
 
-# Build the CLI tool
+### Build the CLI tool
+- run the script to create abinary file that in a directory named bin/
 ```go
-go build -o cmd/dt ./cmd/dt
+chmod +x build.sh
 ```
 
-## Usage Instructions
-. Training a Model
+
+### Usage
+- Training a Model
 ```bash
-./dt -c train -i datasets/train.csv -t class -o model.dt
+.bin/dt -c train -i datasets/train.csv -t class -o model.dt
 ```
 
-. Making Predictions
+- Making Predictions
 ```bash
-./ dt -c predict -i datasets/test.csv -m model.dt -o predictions.csv
+.bin/dt -c predict -i datasets/test.csv -m model.dt -o predictions.csv
 ```
 
 
 ## Algorithm Details
 
-### Decision Tree Basics
-A decision tree is a hierarchical structure that makes sequential decisions based on feature values to arrive at a classification. In this project:
-
-1. Each internal node represents a test on an attribute
-2. Each branch represents an outcome of that test
-3. Each leaf node represents a class prediction
 
 ### C4.5 Algorithm Specifics
 This implementation follows the C4.5 algorithm with these key components:
@@ -108,6 +102,12 @@ func FindBestNumericalSplit(dataset *model.Dataset, attr *model.Attribute, targe
 // Handle missing values during prediction
 func DistributeInstance(instance map[string]interface{}, children map[interface{}]*model.Node) map[*model.Node]float64
 ```
+#### Decision Tree Basics
+A decision tree is a hierarchical structure that makes sequential decisions based on feature values to arrive at a classification. In this project:
+
+1. Each internal node represents a test on an attribute
+2. Each branch represents an outcome of that test
+3. Each leaf node represents a class prediction
 
 #### 3. Tree Building
 ```go
@@ -131,27 +131,42 @@ func EstimateError(node *model.Node, dataset *model.Dataset, targetAttr string) 
 ```
 
 ## Error Handling
+This implementation incorporates several error handling techniques to ensure robustness and smooth execution:
+
+    Missing or Nil Attributes: The system checks for missing or nil values in required attributes and returns descriptive error messages indicating the specific missing attribute.
+
+    Type Conversion Errors: Before converting data types, the system verifies if the conversion is possible, and handles errors by providing fallback results to prevent crashes.
+
+    Invalid Data or Attribute Types: The system checks for valid data types before processing, skipping invalid data and ensuring smooth operation without interruptions.
+
+    Empty Datasets: Operations on empty datasets are handled by early checks, which return default values (e.g., 0 for entropy) to avoid errors.
+
+    Invalid Splits or Thresholds: The system verifies that valid splits exist for attributes and returns an error if no valid splits are found, preventing further erroneous processing.
+
+    Concurrency Issues: Mutexes are used to ensure safe and synchronized access to shared data during parallel processing, preventing race conditions.
+
+    Unknown Attributes: Descriptive error messages are returned when an unknown attribute is encountered, making it easy to identify and fix dataset issues.
 
 ## Performance Optimizations
 
-### Memory Efficiency
-- Use dataset pointers rather than copying data
-- Implement efficient data structures (e.g., sparse representations for categorical data)
+  ### Memory Efficiency
+  - Use dataset pointers rather than copying data
+  - Implement efficient data structures (e.g., sparse representations for categorical data)
 
-### Algorithmic Optimizations
-- Cache entropy calculations for repeated operations
-- Pre-sort numerical attributes to avoid redundant sorting
-- Early stopping for low-gain splits
+  ### Algorithmic Optimizations
+  - Cache entropy calculations for repeated operations
+  - Pre-sort numerical attributes to avoid redundant sorting
+  - Early stopping for low-gain splits
 
-### Parallelization Strategy
-- Parallelize node construction for different branches using worker pools
-- Implement work-stealing for load balancing
-- Use channels for coordination between workers
+  ### Parallelization Strategy
+  - Parallelize node construction for different branches using worker pools
+  - Implement work-stealing for load balancing
+  - Use channels for coordination between workers
 
-### Scaling for Large Datasets
-- Batch processing for datasets that don't fit in memory
-- Sampling techniques for initial attribute evaluation
-- Support for distributed processing (optional advanced feature)
+  ### Scaling for Large Datasets
+  - Batch processing for datasets that don't fit in memory
+  - Sampling techniques for initial attribute evaluation
+  - Support for distributed processing (optional advanced feature)
 
 
 ### Core Model Components
@@ -204,7 +219,13 @@ func DeserializeTree(path string) (*model.DecisionTree, error)
 ```
 
 ## Testing
+```bash
+# Run all tests
+go test ./...
 
+# Run benchmarks
+go test -bench=. ./test/benchmark
+```
 ## Contributors
 
 We appreciate the efforts of our contributors. Connect with them on LinkedIn and GitHub:
@@ -231,24 +252,6 @@ We welcome contributions from everyone! To get started, please follow these step
 4. **Write tests for your changes**: Add tests to verify your changes work as expected.
 5. **Run the test suite**: Ensure all tests pass before submitting your changes. Use the command:
 6. **Create a pull request**: Submit your changes for review.
-
-   ```bash
-   go test ./...
-
-### Coding Standards
-- Follow Go best practices and code style
-- Write clear, concise comments
-- Maintain high test coverage
-- Optimize for performance and memory efficiency
-
-## Testing
-```bash
-# Run all tests
-go test ./...
-
-# Run benchmarks
-go test -bench=. ./test/benchmark
-```
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
