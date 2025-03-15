@@ -64,11 +64,10 @@ func SplitDataset(dataset *model.Dataset, split *model.Split) (*model.Dataset, e
 
 	// Return the new dataset with the filtered subset of rows
 	return &model.Dataset{
-		RowInstances:   subset,
+		RowInstances:     subset,
 		ColumnAttributes: dataset.ColumnAttributes,
 	}, nil
 }
-
 
 // FindBestNumericalSplit identifies the optimal threshold for splitting a numerical attribute.
 // It evaluates potential thresholds using information gain and selects the best one.
