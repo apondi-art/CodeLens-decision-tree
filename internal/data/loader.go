@@ -52,8 +52,8 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 			break
 		}
 	}
-	if targetIndex == -1 {
-		return nil, fmt.Errorf("Target column '%s' not found in CSV", targetColumn)
+	if targetIndex == -1 && targetColumn != "" {
+		return nil, fmt.Errorf("target column '%s' not found in CSV", targetColumn)
 	}
 	dataset.TargetColumn = targetColumn
 
@@ -124,8 +124,10 @@ func GenerateCSVData(path, targetColumn string) (*model.Dataset, error) {
 		dataset.RowInstances = append(dataset.RowInstances, rowInstance)
 
 		// Update TargetOccurrence
-		if classValue, ok := rowInstance[targetColumn].(string); ok {
-			dataset.TargetOccurrence[classValue]++
+		if targetColumn != "" {
+			if classValue, ok := rowInstance[targetColumn].(string); ok {
+				dataset.TargetOccurrence[classValue]++
+			}
 		}
 	}
 

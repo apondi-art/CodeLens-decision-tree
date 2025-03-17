@@ -10,11 +10,11 @@ import (
 
 // Flags stores command-line arguments
 type Flags struct {
-	Command      string // train or predict
-	InputFile    string // Path to input CSV file
-	TargetColumn string // Only for training
-	OutputPath   string // Model output or predictions
-	TrainedFile  string // Only for prediction
+	Command         string // train or predict
+	InputFilePath   string // Path to input CSV file
+	TargetColumn    string // Only for training
+	OutputPath      string // Model output or predictions
+	TrainedFilePath string // Only for prediction
 }
 
 // ParseFlags initializes and validates CLI flags
@@ -25,10 +25,10 @@ func ParseFlags() (Flags, error) {
 	flagSet := flag.NewFlagSet("dt", flag.ContinueOnError)
 
 	flagSet.StringVar(&cmdFlags.Command, "c", "", "Command: train or predict")
-	flagSet.StringVar(&cmdFlags.InputFile, "i", "", "Path to input CSV file")
+	flagSet.StringVar(&cmdFlags.InputFilePath, "i", "", "Path to input CSV file")
 	flagSet.StringVar(&cmdFlags.TargetColumn, "t", "", "Target column (only for training)")
 	flagSet.StringVar(&cmdFlags.OutputPath, "o", "", "Output file path (model or predictions)")
-	flagSet.StringVar(&cmdFlags.TrainedFile, "m", "", "Path to trained model file (only for prediction)")
+	flagSet.StringVar(&cmdFlags.TrainedFilePath, "m", "", "Path to trained model file (only for prediction)")
 
 	// Capture unexpected flag errors
 	err := flagSet.Parse(os.Args[1:])
@@ -55,13 +55,13 @@ func validateFlags(cmdFlags Flags) error {
 
 	switch cmdFlags.Command {
 	case "train":
-		missingFlags = collectMissingFlags(cmdFlags.InputFile, "-i <input.csv>", missingFlags)
+		missingFlags = collectMissingFlags(cmdFlags.InputFilePath, "-i <input.csv>", missingFlags)
 		missingFlags = collectMissingFlags(cmdFlags.TargetColumn, "-t <target_column>", missingFlags)
 		missingFlags = collectMissingFlags(cmdFlags.OutputPath, "-o <output.dt>", missingFlags)
 
 	case "predict":
-		missingFlags = collectMissingFlags(cmdFlags.InputFile, "-i <test.csv>", missingFlags)
-		missingFlags = collectMissingFlags(cmdFlags.TrainedFile, "-m <model.dt>", missingFlags)
+		missingFlags = collectMissingFlags(cmdFlags.InputFilePath, "-i <test.csv>", missingFlags)
+		missingFlags = collectMissingFlags(cmdFlags.TrainedFilePath, "-m <model.dt>", missingFlags)
 		missingFlags = collectMissingFlags(cmdFlags.OutputPath, "-o <predictions.csv>", missingFlags)
 
 	default:

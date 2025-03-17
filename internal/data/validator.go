@@ -9,7 +9,6 @@ import (
 )
 
 // ValidateInputFile checks if the input file exists and is a valid CSV
-// ValidateInputFile checks if the input file exists and is a valid CSV
 func ValidateInputFile(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -38,7 +37,6 @@ func ValidateColumnExists(headers []string, columnName string) error {
 }
 
 // ValidateConsistentColumns checks if prediction dataset has same columns as training dataset
-// ValidateConsistentColumns checks if prediction dataset has same columns as training dataset
 func ValidateConsistentColumns(trainingHeaders, predictionHeaders []string) error {
 	if len(trainingHeaders) != len(predictionHeaders) {
 		return errors.New("training and prediction datasets have different column counts")
@@ -59,7 +57,6 @@ func ValidateConsistentColumns(trainingHeaders, predictionHeaders []string) erro
 }
 
 // ValidateTargetColumn ensures target column data is valid for classification
-// ValidateTargetColumn ensures target column data is valid for classification
 func ValidateTargetColumn(dataset *model.Dataset, targetColumn string) error {
 	if _, exists := dataset.ColumnAttributes[targetColumn]; !exists {
 		return errors.New("target column '" + targetColumn + "' does not exist in dataset")
@@ -71,8 +68,6 @@ func ValidateTargetColumn(dataset *model.Dataset, targetColumn string) error {
 
 	return nil
 }
-
-// ValidateDataCompleteness checks for minimum required data to build a model
 
 // ValidateDataCompleteness checks for minimum required data to build a model
 func ValidateDataCompleteness(dataset *model.Dataset) error {
@@ -118,7 +113,6 @@ func ValidateOutputPath(path string) error {
 	return nil
 }
 
-// ValidateModelFile checks if the model file exists and contains valid JSON
 // ValidateModelFile checks if the model file exists and contains valid JSON
 func ValidateModelFile(path string) error {
 	data, err := os.ReadFile(path)

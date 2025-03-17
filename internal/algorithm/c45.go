@@ -2,6 +2,7 @@ package algorithm
 
 import (
 	"errors"
+	"sync"
 
 	"CodeLens-decision-tree/internal/model"
 )
@@ -12,7 +13,7 @@ func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr
 	if len(dataset.RowInstances) == 0 {
 		return nil, errors.New("dataset is empty")
 	}
-	
+
 	// Base case: If the dataset is pure or no attributes are left, return a leaf node.
 	if dataset.IsPure() || len(attributes) == 0 || depth >= maxDepth {
 		majorityClass := dataset.GetMajorityClass()
@@ -26,7 +27,7 @@ func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr
 	}
 
 	// Select the best attribute to split on.
-	bestAttribute, gainRatio := SelectBestAttribute(*dataset, attributes, targetAttr)
+	bestAttribute, gainRatio := SelectBestAttribute(dataset, attributes, targetAttr)
 	if bestAttribute == nil {
 		return nil, errors.New("no best attribute found")
 	}
@@ -66,25 +67,104 @@ func BuildTree(dataset *model.Dataset, attributes []*model.Attribute, targetAttr
 		return nil, err
 	}
 
-	// Recursively build the tree for each subset.
-	for value, subset := range subsets {
-		childNode, err := BuildTree(subset, remainingAttributes, targetAttr, depth+1, maxDepth)
-		if err != nil {
-			return nil, err
+	// For larger datasets, process children in parallel
+	if len(dataset.RowInstances) > 1000 {
+		var wg sync.WaitGroup
+		var mutex sync.Mutex
+		var buildErrors []error
+
+		for value, subset := range subsets {
+			// Skip empty subsets
+			if len(subset.RowInstances) == 0 {
+				continue
+			}
+
+			wg.Add(1)
+			go func(value interface{}, subset *model.Dataset) {
+				defer wg.Done()
+				childNode, err := BuildTree(subset, remainingAttributes, targetAttr, depth+1, maxDepth)
+
+				mutex.Lock()
+				defer mutex.Unlock()
+
+				if err != nil {
+					buildErrors = append(buildErrors, err)
+					return
+				}
+				node.Children[value] = childNode
+			}(value, subset)
 		}
-		node.Children[value] = childNode
+
+		wg.Wait()
+
+		if len(buildErrors) > 0 {
+			return nil, buildErrors[0]
+		}
+	} else {
+		// Process sequentially for smaller datasets
+		for value, subset := range subsets {
+			// Skip empty subsets
+			if len(subset.RowInstances) == 0 {
+				continue
+			}
+
+			childNode, err := BuildTree(subset, remainingAttributes, targetAttr, depth+1, maxDepth)
+			if err != nil {
+				return nil, err
+			}
+			node.Children[value] = childNode
+		}
 	}
 
 	return node, nil
 }
 
 // SelectBestAttribute selects the attribute with the highest gain ratio.
-func SelectBestAttribute(dataset model.Dataset, attributes []*model.Attribute, targetAttr string) (*model.Attribute, float64) {
+func SelectBestAttribute(dataset *model.Dataset, attributes []*model.Attribute, targetAttr string) (*model.Attribute, float64) {
+	if len(attributes) <= 3 {
+		return selectBestAttributeSmall(dataset, attributes, targetAttr)
+	}
+
+	// Use parallel processing for larger attribute sets
+	var wg sync.WaitGroup
+	results := make([]struct {
+		attr *model.Attribute
+		gain float64
+	}, len(attributes))
+
+	for i, attr := range attributes {
+		wg.Add(1)
+		go func(index int, attr *model.Attribute) {
+			defer wg.Done()
+			gainRatio := CalculateGainRatio(dataset, attr, targetAttr)
+			results[index].attr = attr
+			results[index].gain = gainRatio
+		}(i, attr)
+	}
+
+	wg.Wait()
+
+	// Find the best attribute
+	bestAttribute := (*model.Attribute)(nil)
+	maxGainRatio := -1.0
+
+	for _, result := range results {
+		if result.gain > maxGainRatio {
+			maxGainRatio = result.gain
+			bestAttribute = result.attr
+		}
+	}
+
+	return bestAttribute, maxGainRatio
+}
+
+// selectBestAttributeSmall handles small attribute sets sequentially
+func selectBestAttributeSmall(dataset *model.Dataset, attributes []*model.Attribute, targetAttr string) (*model.Attribute, float64) {
 	var bestAttribute *model.Attribute
 	maxGainRatio := -1.0
 
 	for _, attr := range attributes {
-		gainRatio := CalculateGainRatio(&dataset, attr, targetAttr)
+		gainRatio := CalculateGainRatio(dataset, attr, targetAttr)
 		if gainRatio > maxGainRatio {
 			maxGainRatio = gainRatio
 			bestAttribute = attr
@@ -99,13 +179,11 @@ func MajorityClass(dataset *model.Dataset, targetAttr string) string {
 	classCounts := dataset.CountClassInstances()
 	majorityClass := ""
 	maxCount := 0
-
 	for class, count := range classCounts {
 		if count > maxCount {
 			majorityClass = class
 			maxCount = count
 		}
 	}
-
 	return majorityClass
 }

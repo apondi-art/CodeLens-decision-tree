@@ -2,70 +2,83 @@ package serialization
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"CodeLens-decision-tree/internal/model"
 )
+
+// CustomNode is a temporary structure that matches the JSON format
+type CustomNode struct {
+	Attribute         string                 `json:"attribute"`
+	SplitValue        interface{}            `json:"splitValue"`
+	Children          map[string]*CustomNode `json:"children"`
+	IsLeaf            bool                   `json:"isLeaf"`
+	PredictedClass    string                 `json:"predictedClass"`
+	ClassDistribution map[string]int         `json:"classDistribution"`
+	Depth             int                    `json:"depth"`
+	ErrorEstimate     float64                `json:"errorEstimate"`
+	GainRatio         float64                `json:"gainRatio"`
+	SampleCount       int                    `json:"sampleCount"`
+}
 
 // DeserializeTree loads a decision tree from a JSON file
 func DeserializeTree(path string) (*model.DecisionTree, error) {
 	// Read JSON file
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read model file: %v", err)
 	}
 
-	// Parse JSON
-	var jsonData map[string]interface{}
-	if err := json.Unmarshal(data, &jsonData); err != nil {
-		return nil, err
+	// Parse JSON into our custom structure
+	var customNode CustomNode
+	if err := json.Unmarshal(data, &customNode); err != nil {
+		return nil, fmt.Errorf("failed to parse model JSON: %v", err)
 	}
 
-	// Convert JSON to DecisionTree
-	tree := &model.DecisionTree{}
-	tree.Root, err = JSONToNode(jsonData["Root"].(map[string]interface{}))
-	if err != nil {
-		return nil, err
+	// Convert the custom node to a model.Node
+	rootNode := convertToModelNode(&customNode)
+
+	tree := &model.DecisionTree{
+		Root:       rootNode,
+		TargetAttr: customNode.Attribute, // Set the target attribute
 	}
 
 	return tree, nil
 }
 
-// JSONToNode converts a JSON object to a DecisionTree Node
-func JSONToNode(jsonData map[string]interface{}) (*model.Node, error) {
+// Convert the CustomNode to a model.Node
+func convertToModelNode(customNode *CustomNode) *model.Node {
+	if customNode == nil {
+		return nil
+	}
+
+	// Create an attribute structure
+	attribute := &model.Attribute{
+		Name: customNode.Attribute,
+		// Assume it's a categorical attribute
+		Type: model.Categorical,
+	}
+
+	// Create the node with proper attribute
 	node := &model.Node{
-		Attribute: &model.Attribute{Name: jsonData["Attribute"].(string)},
-		IsLeaf:    jsonData["IsLeaf"].(bool),
+		Attribute:         attribute,
+		SplitValue:        customNode.SplitValue,
+		IsLeaf:            customNode.IsLeaf,
+		PredictedClass:    customNode.PredictedClass,
+		Depth:             customNode.Depth,
+		SampleCount:       customNode.SampleCount,
+		ClassDistribution: customNode.ClassDistribution,
+		ErrorEstimate:     customNode.ErrorEstimate,
+		GainRatio:         customNode.GainRatio,
+		Children:          make(map[interface{}]*model.Node),
 	}
 
-	if predictedClass, ok := jsonData["PredictedClass"].(string); ok {
-		node.PredictedClass = predictedClass
+	// Convert children if any
+	for key, childCustomNode := range customNode.Children {
+		modelChild := convertToModelNode(childCustomNode)
+		node.Children[key] = modelChild
 	}
 
-	if splitValue, ok := jsonData["SplitValue"].(string); ok {
-		node.SplitValue = splitValue
-	}
-
-	// Recursively populate child nodes
-	childrenMap := make(map[string]*model.Node)
-	if children, ok := jsonData["Children"].(map[string]interface{}); ok {
-		for key, childData := range children {
-			childDataMap, ok := childData.(map[string]interface{})
-			if !ok {
-			}
-
-			childNode, err2 := JSONToNode(childDataMap)
-			if err2 != nil {
-				return nil, err2
-			}
-			childrenMap[key] = childNode
-		}
-	}
-
-	node.Children = make(map[interface{}]*model.Node)
-	for key, child := range childrenMap {
-		node.Children[key] = child
-	}
-
-	return node, nil
+	return node
 }

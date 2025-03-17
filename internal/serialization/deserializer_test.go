@@ -15,17 +15,20 @@ func TestDeserializeTree(t *testing.T) {
 
 	// Write sample JSON data to the file
 	jsonData := `{
-		"Root": {
-			"Attribute": "Color",
-			"IsLeaf": false,
-			"Children": {
-				"Red": {
-					"Attribute": "Size",
-					"IsLeaf": true,
-					"PredictedClass": "Apple"
-				}
+		"attribute": "Color",
+		"isLeaf": false,
+		"children": {
+			"Red": {
+				"attribute": "Size",
+				"isLeaf": true,
+				"predictedClass": "Apple"
 			}
-		}
+		},
+		"classDistribution": {"Apple": 10, "Banana": 5},
+		"depth": 1,
+		"errorEstimate": 0.1,
+		"gainRatio": 0.25,
+		"sampleCount": 15
 	}`
 	_, err = tempFile.WriteString(jsonData)
 	assert.NoError(t, err)
@@ -47,28 +50,41 @@ func TestDeserializeTree(t *testing.T) {
 	assert.Equal(t, "Apple", redNode.PredictedClass)
 }
 
-func TestJSONToNode(t *testing.T) {
-	// Sample JSON data for a node
-	jsonData := map[string]interface{}{
-		"Attribute": "Color",
-		"IsLeaf":    false,
-		"Children": map[string]interface{}{
-			"Red": map[string]interface{}{
-				"Attribute":      "Size",
-				"IsLeaf":         true,
-				"PredictedClass": "Apple",
+func TestConvertToModelNode(t *testing.T) {
+	// Sample CustomNode data
+	customNode := &CustomNode{
+		Attribute:      "Color",
+		SplitValue:     "Red",
+		IsLeaf:         false,
+		PredictedClass: "",
+		ClassDistribution: map[string]int{
+			"Apple":  10,
+			"Banana": 5,
+		},
+		Depth:         1,
+		ErrorEstimate: 0.1,
+		GainRatio:     0.25,
+		SampleCount:   15,
+		Children: map[string]*CustomNode{
+			"Red": {
+				Attribute:      "Size",
+				IsLeaf:         true,
+				PredictedClass: "Apple",
 			},
 		},
 	}
 
-	// Call JSONToNode
-	node, err := JSONToNode(jsonData)
-	assert.NoError(t, err)
-	assert.NotNil(t, node)
+	// Call convertToModelNode
+	node := convertToModelNode(customNode)
 
 	// Validate the node
 	assert.Equal(t, "Color", node.Attribute.Name)
 	assert.False(t, node.IsLeaf)
+	assert.Equal(t, "Red", node.SplitValue)
+	assert.Equal(t, 1, node.Depth)
+	assert.Equal(t, 0.1, node.ErrorEstimate)
+	assert.Equal(t, 0.25, node.GainRatio)
+	assert.Equal(t, 15, node.SampleCount)
 
 	// Validate child nodes
 	assert.Contains(t, node.Children, "Red")
